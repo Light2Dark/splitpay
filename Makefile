@@ -43,7 +43,7 @@ build:
 	go mod tidy && \
    	templ generate && \
 	./static/css/tailwindcss -i ./static/css/input.css -o ./static/css/output.css --minify && \
-	CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o bin/go-starter ./cmd/api && \
+	CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o bin/splitpay ./cmd/api && \
 	docker build -t splitpay .
 
 update_packages:

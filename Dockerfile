@@ -8,7 +8,7 @@ RUN go mod download
 
 COPY . ./
 
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /bin/go-starter ./cmd/api 
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /bin/splitpay ./cmd/api 
 
 # run tests in container
 FROM build-stage as run-test-stage
@@ -19,7 +19,7 @@ FROM alpine:edge AS build-release-stage
 
 WORKDIR /
 
-COPY --from=build-stage /bin/go-starter /bin/go-starter
+COPY --from=build-stage /bin/splitpay /bin/splitpay
 COPY --from=build-stage /app/static /static
 
 # set timezone & install CA certs for HTTPS
@@ -27,4 +27,4 @@ RUN apk --no-cache add ca-certificates tzdata
 
 EXPOSE 8080
 
-ENTRYPOINT ["/bin/go-starter"]
+ENTRYPOINT ["/bin/splitpay"]

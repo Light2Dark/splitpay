@@ -22,7 +22,7 @@ func (app application) dataHandler(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var split models.Splits
 		if err := rows.Scan(&split.ID, &split.Link); err != nil {
-			app.logger.Error("failed to scan row", err)
+			app.logger.Error("failed to scan row", "error", err)
 			templates.Error(fmt.Sprintf("Error: %s", err)).Render(r.Context(), w)
 			return
 		}
