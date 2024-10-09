@@ -13,4 +13,4 @@ make dev            # Start a server locally
 make dev port=9000  # Start a server at a specific port
 
 make build          # Build the binary & docker image
-```
+``` 
