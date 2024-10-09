@@ -1,0 +1,19 @@
+package templates
+
+templ Index() {
+	@Layout(Main())
+}
+
+templ Main() {
+	<div class="flex flex-col items-center h-full">
+		<h1 class="mt-10 text-3xl">Split Pay</h1>
+		<div class="mt-40">
+			<button
+				hx-get="/data"
+				hx-target="#replace"
+				class="border-black bg-white rounded-lg px-2 py-1"
+			>Get data</button>
+			<p id="replace">Sample data</p>
+		</div>
+	</div>
+}

@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+a {
+    text-decoration: underline;
+    text-decoration-color: rgb(29 78 216);
+}

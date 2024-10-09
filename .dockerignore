@@ -1,0 +1,4 @@
+**/tailwindcss
+*.env
+bin/*
+.vscode

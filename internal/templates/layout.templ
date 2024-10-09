@@ -1,0 +1,22 @@
+package templates
+
+templ Layout(children ...templ.Component) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>Split Pay</title>
+			<link rel="stylesheet" href="/static/css/output.css" type="text/css"/>
+			<link rel="preconnect" href="https://fonts.googleapis.com"/>
+			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+			<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet"/>
+			<script src="/static/htmx.min.js"></script>
+		</head>
+		<body class="bg-gradient-to-r from-blue-200 to-cyan-200 h-screen font-main">
+			for _, child := range children {
+				@child
+			}
+		</body>
+	</html>
+}
