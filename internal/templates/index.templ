@@ -1,19 +1,50 @@
 package templates
 
+// import "github.com/Light2Dark/splitpay/models"
 templ Index() {
 	@Layout(Main())
 }
 
 templ Main() {
+	<script type="text/javascript">
+		function handlePreviewImage(e) {
+			if (e.target.files && e.target.files.length > 0) {
+				const [file] = e.target.files
+				if (file) {
+					imagePreview.src = URL.createObjectURL(file)
+					imagePreview.classList.remove('hidden')
+				}
+			}
+		}
+	</script>
 	<div class="flex flex-col items-center h-full">
 		<h1 class="mt-10 text-3xl">Split Pay</h1>
-		<div class="mt-40">
-			<button
-				hx-get="/data"
-				hx-target="#replace"
-				class="border-black bg-white rounded-lg px-2 py-1"
-			>Get data</button>
-			<p id="replace">Sample data</p>
+		<div class="mt-32 flex">
+			<form
+				method="POST"
+				enctype="multipart/form-data"
+				hx-post="/scanReceipt"
+				hx-push-url="true"
+				class="flex flex-col items-center gap-6"
+			>
+				<div class="border border-black p-4" x-data>
+					<label for="receipt" class="cursor-pointer">Scan Receipt</label>
+					<input
+						id="receipt"
+						name="receipt"
+						type="file"
+						accept="image/*"
+						capture="environment"
+						@change="handlePreviewImage"
+						class="hidden"
+					/>
+				</div>
+				<img id="imagePreview" src="#" alt="Scanned receipt image" class="hidden h-64 w-52 object-contain"/>
+				<button type="submit" class="bg-blue-950 border rounded-lg text-white w-min px-4 py-1">Next</button>
+			</form>
 		</div>
+		<p id="output" class="mt-8"></p>
+		// temporary test
+		// @ReceiptTable(models.MockReceipt)
 	</div>
 }

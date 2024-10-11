@@ -29,7 +29,7 @@ func Error(message string) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<h2>Sorry, please try again. We are facing some techincal difficulty.</h2><p>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<h2>Sorry, please try again. We are facing some techincal difficulties.</h2><p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

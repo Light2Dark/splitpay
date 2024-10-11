@@ -12,12 +12,14 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/lmittmann/tint"
+	"github.com/sashabaranov/go-openai"
 	_ "github.com/tursodatabase/libsql-client-go/libsql"
 )
 
 type application struct {
 	logger *slog.Logger
 	db     *sql.DB
+	openai *openai.Client
 }
 
 func main() {
@@ -59,9 +61,16 @@ func main() {
 	}
 	defer db.Close()
 
+	openai_token, exists := os.LookupEnv("OPENAI_TOKEN")
+	if !exists {
+		logger.Error("unable to obtain openai token")
+	}
+	openai_client := openai.NewClient(openai_token)
+
 	app := application{
 		logger: logger,
 		db:     db,
+		openai: openai_client,
 	}
 
 	router := http.NewServeMux()
@@ -74,7 +83,7 @@ func main() {
 
 	router.HandleFunc("GET /healthcheck", app.healthcheckHandler)
 	router.HandleFunc("GET /", app.indexHandler)
-	router.HandleFunc("GET /data", app.dataHandler)
+	router.HandleFunc("POST /scanReceipt", app.scanReceiptHandler)
 
 	server := http.Server{
 		Addr:    fmt.Sprintf(":%d", *port),

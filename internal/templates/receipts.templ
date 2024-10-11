@@ -1,0 +1,23 @@
+package templates
+
+import (
+	"fmt"
+	"github.com/Light2Dark/splitpay/models"
+)
+
+templ ReceiptTable(receipt models.Receipt) {
+	<table>
+		<tr>
+			<th>Description</th>
+			<th>Quantity</th>
+			<th>Price</th>
+		</tr>
+		for _, item := range receipt.Items {
+			<tr>
+				<td>{ item.Name }</td>
+				<td>{ item.Quantity }</td>
+				<td>{ fmt.Sprintf("%.2f", item.Price) }</td>
+			</tr>
+		}
+	</table>
+}
