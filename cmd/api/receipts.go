@@ -3,12 +3,11 @@ package main
 import (
 	"bytes"
 	"encoding/base64"
-	"encoding/json"
-	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
 
+	"github.com/Light2Dark/splitpay/internal/templates"
 	"github.com/Light2Dark/splitpay/models"
 	"github.com/sashabaranov/go-openai"
 	"github.com/sashabaranov/go-openai/jsonschema"
@@ -45,7 +44,7 @@ func (app application) scanReceiptHandler(w http.ResponseWriter, r *http.Request
 					MultiContent: []openai.ChatMessagePart{
 						{
 							Type: openai.ChatMessagePartTypeText,
-							Text: "This is a receipt for a meal that a group of people had. I would like you to return a list of items that were ordered, alongside their price and quantity. Sometimes, an item will have descriptions or additions, ignore these, just take the main item and any additional charges if there is any. Also, return the service charge and sales tax percentage that was charged. If there is nothing, return an empty string.",
+							Text: "This is a receipt for a meal that a group of people had. I would like you to return a list of items that were ordered, alongside their price and quantity. The quantity might be at the start like '1' or in the middle. There may be times when there are additions to them item, like HOT / + milk. These rows will not have a corresponding charge. Ignore them. Extract the subtotal displayed on the receipt too. Lastly, return the service charge amount and tax (amount and percent) that was charged. If there is nothing, return an empty value for those fields.",
 						},
 						{
 							Type: openai.ChatMessagePartTypeImageURL,
@@ -78,8 +77,10 @@ func (app application) scanReceiptHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(&healthResponse{Status: fmt.Sprintf("response: %v", receipt)})
+	templates.ReceiptTable(receipt).Render(r.Context(), w)
+
+	// w.Header().Set("Content-Type", "application/json")
+	// json.NewEncoder(w).Encode(&healthResponse{Status: fmt.Sprintf("response: %v", receipt)})
 }
 
 func toBase64(b []byte) string {

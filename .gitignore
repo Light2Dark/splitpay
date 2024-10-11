@@ -2,6 +2,8 @@
 *.env
 bin/*
 .vscode
+*.jpeg
+*.png
 
 # excluded files here
 !.keep

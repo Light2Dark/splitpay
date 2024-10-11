@@ -19,11 +19,6 @@ th {
 tr th:first-child,
 tr td:first-child {
   text-align: left;
-  width: 90%;
+  width: 60%;
   /* Force description column to take more space */
-}
-tfoot tr td {
-  font-weight: bold;
-  border-top: 1px black solid;
-  border-bottom: 1px black solid;
 }
