@@ -38,13 +38,13 @@ var MockReceipt = Receipt{
 		Quantity int
 		Price    float64
 	}{
-		{ID: 1, Name: "Item1", Quantity: 2, Price: 10.50},
+		{ID: 1, Name: "Item1", Quantity: 2, Price: 8.40},
 		{ID: 2, Name: "Item2", Quantity: 1, Price: 5.75},
-		{ID: 3, Name: "Item3", Quantity: 3, Price: 7.20},
+		{ID: 3, Name: "Item3", Quantity: 3, Price: 15.00},
 	},
-	Subtotal:      22.8,
-	ServiceCharge: 2.50,
+	Subtotal:      29.15,
+	ServiceCharge: 2.92,
 	TaxPercent:    6,
-	TaxAmount:     0.5,
-	TotalAmount:   45.90,
+	TaxAmount:     1.75,
+	TotalAmount:   33.82,
 }

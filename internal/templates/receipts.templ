@@ -12,23 +12,15 @@ templ ReceiptTable(receipt models.Receipt) {
 
 		document.addEventListener('alpine:init', () => {
 			Alpine.data('receipt', () => ({
-				receipt: {
-					Items: receipt.Items,
-					Subtotal: Number(receipt.Subtotal),
-					TaxPercent: Number(receipt.TaxPercent),
-					TaxAmount: Number(receipt.TaxAmount),
-					ServiceCharge: Number(receipt.ServiceCharge),
-					TotalAmount: Number(receipt.TotalAmount),
-				},
+				receipt: receipt,
 
 				deleteItem(itemID) {
 					for (let i = 0; i < this.receipt.Items.length; i++) {
 						item = this.receipt.Items[i]
 						if (item.ID === itemID) {
 							this.receipt.Items.splice(i, 1)
-							this.receipt.Subtotal = this.roundTo2DP(this.receipt.Subtotal - (item.Price * item.Quantity))
-							this.receipt.TaxAmount = this.roundTo2DP(this.receipt.Subtotal * (this.receipt.TaxPercent / 100))
-							this.receipt.TotalAmount = this.roundTo2DP(this.receipt.Subtotal + this.receipt.TaxAmount + this.receipt.ServiceCharge)
+							this.receipt.Subtotal = this.roundTo2DP(this.receipt.Subtotal - item.Price)
+							this.updateAmounts()
 							break
 						}
 					}	
@@ -41,14 +33,23 @@ templ ReceiptTable(receipt models.Receipt) {
 							itemPrice = item.Price / item.Quantity
 							if (quantity < 0 && item.Quantity > 0) {
 								this.receipt.Items[i].Quantity += quantity
+								this.receipt.Items[i].Price = this.roundTo2DP(this.receipt.Items[i].Price - itemPrice)
 								this.receipt.Subtotal = this.roundTo2DP(this.receipt.Subtotal - itemPrice)
+								this.updateAmounts()
 							} else if (quantity > 0) {
 								this.receipt.Items[i].Quantity += quantity
+								this.receipt.Items[i].Price = this.roundTo2DP(Number(this.receipt.Items[i].Price) + Number(itemPrice))
 								this.receipt.Subtotal = this.roundTo2DP(Number(this.receipt.Subtotal) + Number(itemPrice))
+								this.updateAmounts()
 							}
 							break
 						}
 					}
+				},
+
+				updateAmounts() {
+					this.receipt.TaxAmount = this.roundTo2DP(this.receipt.Subtotal * (this.receipt.TaxPercent / 100))
+					this.receipt.TotalAmount = this.roundTo2DP(Number(this.receipt.Subtotal) + Number(this.receipt.TaxAmount) + Number(this.receipt.ServiceCharge))
 				},
 
 				roundTo2DP(number) {
@@ -66,30 +67,6 @@ templ ReceiptTable(receipt models.Receipt) {
 					<th>Price</th>
 				</tr>
 			</thead>
-			// for _, item := range receipt.Items {
-			// 	<tr>
-			// 		<td>
-			// 			// <button hx-delete={ fmt.Sprintf("/deleteItem/%v", item.ID) } hx-target="closest tr" hx-swap="outerHTML">
-			// 			<button @click={ fmt.Sprintf("deleteItem(%v)", item.ID) }>
-			// 				<i class="fa fa-minus-circle"></i>
-			// 			</button>&nbsp;&nbsp;{ item.Name }
-			// 		</td>
-			// 		<td>
-			// 			<button><span class="text-xs">&#9664;</span></button>
-			// 			{ fmt.Sprintf("%v", item.Quantity) }
-			// 			<button><span class="text-xs">&#9658;</span></button>
-			// 		</td>
-			// 		<td>
-			// 			<input
-			// 				type="number"
-			// 				name={ fmt.Sprintf("price-%d", item.ID) }
-			// 				id={ fmt.Sprintf("price-%d", item.ID) }
-			// 				value={ fmt.Sprintf("%.2f", item.Price) }
-			// 				class="w-14 rounded-sm px-0.5 text-right"
-			// 			/>
-			// 		</td>
-			// 	</tr>
-			// }
 			<template x-for="item in receipt.Items">
 				<tr>
 					<td>
