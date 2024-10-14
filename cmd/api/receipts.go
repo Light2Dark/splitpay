@@ -3,9 +3,12 @@ package main
 import (
 	"bytes"
 	"encoding/base64"
+	"fmt"
 	"io"
+	"math"
 	"mime/multipart"
 	"net/http"
+	"strconv"
 
 	"github.com/Light2Dark/splitpay/internal/templates"
 	"github.com/Light2Dark/splitpay/models"
@@ -27,8 +30,9 @@ func (app application) scanReceiptHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	var receipt models.Receipt
-	schema, err := jsonschema.GenerateSchemaForType(receipt)
+	var receiptOpenAI models.ReceiptOpenAI
+
+	schema, err := jsonschema.GenerateSchemaForType(receiptOpenAI)
 	if err != nil {
 		app.logError(w, r, "GenerateSchemaForType error", err)
 		return
@@ -37,14 +41,14 @@ func (app application) scanReceiptHandler(w http.ResponseWriter, r *http.Request
 	resp, err := app.openai.CreateChatCompletion(
 		r.Context(),
 		openai.ChatCompletionRequest{
-			Model:     openai.GPT4oMini,
+			Model:     openai.GPT4o,
 			MaxTokens: 1000,
 			Messages: []openai.ChatCompletionMessage{
 				{Role: openai.ChatMessageRoleUser,
 					MultiContent: []openai.ChatMessagePart{
 						{
 							Type: openai.ChatMessagePartTypeText,
-							Text: "This is a receipt for a meal that a group of people had. I would like you to return a list of items that were ordered, alongside their price and quantity. The quantity might be at the start like '1' or in the middle. There may be times when there are additions to them item, like HOT / + milk. These rows will not have a corresponding charge. Ignore them. Extract the subtotal displayed on the receipt too. Lastly, return the service charge amount and tax (amount and percent) that was charged. If there is nothing, return an empty value for those fields.",
+							Text: "This is a receipt. I would like you to return a list of items that were ordered, alongside their price and quantity. The quantity might be at the start like '1' or in the middle. There may be times when there are additions to the item, like HOT / + milk underneath Coffee. These rows will not have a corresponding charge. Ignore them. Lastly, return the service charge amount and tax (amount and percent) that was charged. Check the image carefully and spend some time to extract accurate information. Do not change the words of what is displayed as it may be in different languages.",
 						},
 						{
 							Type: openai.ChatMessagePartTypeImageURL,
@@ -71,16 +75,88 @@ func (app application) scanReceiptHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = schema.Unmarshal(resp.Choices[0].Message.Content, &receipt)
+	err = schema.Unmarshal(resp.Choices[0].Message.Content, &receiptOpenAI)
 	if err != nil {
 		app.logError(w, r, "Unmarschal schema error", err)
 		return
 	}
 
-	templates.ReceiptTable(receipt).Render(r.Context(), w)
+	// convert OpenAIReceipt to actual receipt
+	var receipt models.Receipt
+	receipt.ServiceCharge = receiptOpenAI.ServiceCharge
+	receipt.TotalAmount = receiptOpenAI.TotalAmount
+	receipt.TaxAmount = receiptOpenAI.TaxAmount
+	receipt.TaxPercent = receiptOpenAI.TaxPercent
 
-	// w.Header().Set("Content-Type", "application/json")
-	// json.NewEncoder(w).Encode(&healthResponse{Status: fmt.Sprintf("response: %v", receipt)})
+	var itemCount int = 1
+	for _, item := range receiptOpenAI.Items {
+		var itemAI = struct {
+			ID       int
+			Name     string
+			Quantity int
+			Price    float64
+		}{
+			ID:       itemCount,
+			Name:     item.Name,
+			Quantity: item.Quantity,
+			Price:    item.Price,
+		}
+		receipt.Items = append(receipt.Items, itemAI)
+		itemCount = itemCount + 1
+	}
+
+	// totalAmount is almost always true
+	// we need to get a single item price and store that in receipt, to improve accuracy
+	var subtotal float64
+	for _, item := range receipt.Items {
+		totalPrice := item.Price
+		subtotal += totalPrice
+		qty := item.Quantity
+
+		singleItemPrice := totalPrice / float64(qty)
+		singleItemPrice = roundTo2DP(singleItemPrice)
+		item.Price = singleItemPrice
+	}
+
+	if subtotal != receipt.Subtotal {
+		app.logger.Info(fmt.Sprintf("incorrect subtotal by openai, openai: %f, expected: %f", receipt.Subtotal, subtotal))
+		receipt.Subtotal = subtotal
+	}
+
+	var taxAmount = roundTo2DP(subtotal * 0.06)
+	if taxAmount != receipt.TaxAmount {
+		app.logger.Info(fmt.Sprintf("incorrect tax amount by openai, openai: %f, expected: %f", receipt.TaxAmount, taxAmount))
+		receipt.TaxAmount = taxAmount
+	}
+
+	var totalAmountExpected = subtotal + taxAmount + receipt.ServiceCharge
+	if totalAmountExpected != receipt.TotalAmount {
+		app.logger.Info(fmt.Sprintf("incorrect total amount by openai, openai: %f, expected: %f", receipt.TotalAmount, totalAmountExpected))
+	}
+
+	app.receipt = receipt
+	templates.ReceiptTable(receipt).Render(r.Context(), w)
+}
+
+func (app application) deleteItemHandler(w http.ResponseWriter, r *http.Request) {
+	itemNumStr := r.PathValue("itemNum")
+	itemNum, err := strconv.Atoi(itemNumStr)
+	if err != nil {
+		app.logger.Error("non-integer passed to delete item handler", "itemNum", itemNumStr)
+		return
+	}
+
+	for ind, item := range app.receipt.Items {
+		if item.ID == itemNum {
+			app.receipt.Items = append(app.receipt.Items[:ind], app.receipt.Items[ind+1:]...)
+			app.receipt.Subtotal = app.receipt.Subtotal - (item.Price * float64(item.Quantity))
+			app.receipt.TaxAmount = app.receipt.Subtotal * float64(app.receipt.TaxPercent)
+			app.receipt.TotalAmount = app.receipt.Subtotal + app.receipt.TaxAmount + app.receipt.ServiceCharge
+			break
+		}
+	}
+
+	app.logger.Info("deleted", "receipt", app.receipt)
 }
 
 func toBase64(b []byte) string {
@@ -109,4 +185,8 @@ func imageFileToBase64(file multipart.File) (string, error) {
 	base64Encoding += toBase64(imgBytes)
 
 	return base64Encoding, nil
+}
+
+func roundTo2DP(val float64) float64 {
+	return math.Round(val*100) / 100
 }

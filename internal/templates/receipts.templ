@@ -6,38 +6,142 @@ import (
 )
 
 templ ReceiptTable(receipt models.Receipt) {
-	<table>
-		<thead>
-			<tr>
-				<th>Description</th>
-				<th>Qty</th>
-				<th>Price</th>
-			</tr>
-		</thead>
-		for _, item := range receipt.Items {
-			<tr>
-				<td>{ item.Name }</td>
-				<td>{ item.Quantity }</td>
-				<td>{ fmt.Sprintf("%.2f", item.Price) }</td>
-			</tr>
-		}
-		<tfoot class="border-t border-black font-semibold">
-			<tr>
-				<td colspan="2">Subtotal</td>
-				<td>{ fmt.Sprintf("%.2f", receipt.Subtotal) }</td>
-			</tr>
-			<tr>
-				<td colspan="2">Service Charge</td>
-				<td>{ fmt.Sprintf("%.2f", receipt.ServiceCharge) }</td>
-			</tr>
-			<tr>
-				<td colspan="2">Tax ({ fmt.Sprintf("%d", receipt.TaxPercent) }%)</td>
-				<td>{ fmt.Sprintf("%.2f", receipt.TaxAmount) }</td>
-			</tr>
-			<tr class="font-extrabold border-b border-black">
-				<td colspan="2">Total</td>
-				<td>{ fmt.Sprintf("%.2f", receipt.TotalAmount) }</td>
-			</tr>
-		</tfoot>
-	</table>
+	@templ.JSONScript("receipt", receipt)
+	<script type="text/javascript">
+		const receipt = JSON.parse(document.getElementById("receipt").textContent)
+
+		document.addEventListener('alpine:init', () => {
+			Alpine.data('receipt', () => ({
+				receipt: {
+					Items: receipt.Items,
+					Subtotal: Number(receipt.Subtotal),
+					TaxPercent: Number(receipt.TaxPercent),
+					TaxAmount: Number(receipt.TaxAmount),
+					ServiceCharge: Number(receipt.ServiceCharge),
+					TotalAmount: Number(receipt.TotalAmount),
+				},
+
+				deleteItem(itemID) {
+					for (let i = 0; i < this.receipt.Items.length; i++) {
+						item = this.receipt.Items[i]
+						if (item.ID === itemID) {
+							this.receipt.Items.splice(i, 1)
+							this.receipt.Subtotal = this.roundTo2DP(this.receipt.Subtotal - (item.Price * item.Quantity))
+							this.receipt.TaxAmount = this.roundTo2DP(this.receipt.Subtotal * (this.receipt.TaxPercent / 100))
+							this.receipt.TotalAmount = this.roundTo2DP(this.receipt.Subtotal + this.receipt.TaxAmount + this.receipt.ServiceCharge)
+							break
+						}
+					}	
+				},
+
+				modifyQuantity(itemID, quantity) {
+					for (let i = 0; i < this.receipt.Items.length; i++) {
+						item = this.receipt.Items[i]
+						if (item.ID === itemID) {
+							itemPrice = item.Price / item.Quantity
+							if (quantity < 0 && item.Quantity > 0) {
+								this.receipt.Items[i].Quantity += quantity
+								this.receipt.Subtotal = this.roundTo2DP(this.receipt.Subtotal - itemPrice)
+							} else if (quantity > 0) {
+								this.receipt.Items[i].Quantity += quantity
+								this.receipt.Subtotal = this.roundTo2DP(Number(this.receipt.Subtotal) + Number(itemPrice))
+							}
+							break
+						}
+					}
+				},
+
+				roundTo2DP(number) {
+					return (Math.round(number * 100) / 100).toFixed(2)
+				}
+			}))
+		})
+	</script>
+	<div class="w-5/6 mt-20 mb-10">
+		<table x-data="receipt">
+			<thead>
+				<tr>
+					<th>Description</th>
+					<th>Qty</th>
+					<th>Price</th>
+				</tr>
+			</thead>
+			// for _, item := range receipt.Items {
+			// 	<tr>
+			// 		<td>
+			// 			// <button hx-delete={ fmt.Sprintf("/deleteItem/%v", item.ID) } hx-target="closest tr" hx-swap="outerHTML">
+			// 			<button @click={ fmt.Sprintf("deleteItem(%v)", item.ID) }>
+			// 				<i class="fa fa-minus-circle"></i>
+			// 			</button>&nbsp;&nbsp;{ item.Name }
+			// 		</td>
+			// 		<td>
+			// 			<button><span class="text-xs">&#9664;</span></button>
+			// 			{ fmt.Sprintf("%v", item.Quantity) }
+			// 			<button><span class="text-xs">&#9658;</span></button>
+			// 		</td>
+			// 		<td>
+			// 			<input
+			// 				type="number"
+			// 				name={ fmt.Sprintf("price-%d", item.ID) }
+			// 				id={ fmt.Sprintf("price-%d", item.ID) }
+			// 				value={ fmt.Sprintf("%.2f", item.Price) }
+			// 				class="w-14 rounded-sm px-0.5 text-right"
+			// 			/>
+			// 		</td>
+			// 	</tr>
+			// }
+			<template x-for="item in receipt.Items">
+				<tr>
+					<td>
+						// magic
+						<button @click="deleteItem(item.ID)">
+							<i class="fa fa-minus-circle"></i>
+						</button>&nbsp;&nbsp;<span x-text="item.Name"></span>
+					</td>
+					<td>
+						<button @click="modifyQuantity(item.ID, -1)"><span class="text-xs">&#9664;</span></button>
+						<span x-text="item.Quantity"></span>
+						<button @click="modifyQuantity(item.ID, 1)"><span class="text-xs">&#9658;</span></button>
+					</td>
+					<td>
+						<input
+							type="number"
+							x-model="item.Price"
+							class="w-14 rounded-sm px-0.5 text-right"
+						/>
+					</td>
+				</tr>
+			</template>
+			<tfoot class="border-t border-black font-semibold">
+				<tr>
+					<td colspan="2">Subtotal</td>
+					<td x-text="receipt.Subtotal"></td>
+				</tr>
+				<tr>
+					<td colspan="2">Service Charge</td>
+					<td>
+						<input
+							type="number"
+							name="service-charge"
+							id="service-charge"
+							value={ fmt.Sprintf("%.2f", receipt.ServiceCharge) }
+							class="w-14 rounded-sm px-0.5 text-right"
+						/>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2">Tax (<span x-text="receipt.TaxPercent"></span>%)</td>
+					<td x-text="receipt.TaxAmount"></td>
+				</tr>
+				<tr class="font-extrabold border-b border-black">
+					<td colspan="2">Total</td>
+					<td x-text="receipt.TotalAmount"></td>
+				</tr>
+			</tfoot>
+		</table>
+		<div class="mt-10 flex flex-row gap-6 justify-center">
+			<button class="rounded-lg border border-black p-2">Add Item</button>
+			<button class="rounded-lg border border-black p-2">Share Link</button>
+		</div>
+	</div>
 }

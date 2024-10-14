@@ -1,5 +1,7 @@
 package templates
 
+import "github.com/Light2Dark/splitpay/models"
+
 templ Index() {
 	@Layout(Main())
 }
@@ -19,31 +21,32 @@ templ Main() {
 	</script>
 	<div class="flex flex-col items-center h-full">
 		<h1 class="mt-10 text-3xl">Split Pay</h1>
-		<div id="formContainer" class="mt-32 flex">
-			<form
-				method="POST"
-				enctype="multipart/form-data"
-				hx-post="/scanReceipt"
-				hx-push-url="true"
-				hx-swap="outerHTML"
-				hx-target="#formContainer"
-				class="flex flex-col items-center gap-6"
-			>
-				<div class="border border-black p-4" x-data>
-					<label for="receipt" class="cursor-pointer">Scan Receipt</label>
-					<input
-						id="receipt"
-						name="receipt"
-						type="file"
-						accept="image/*"
-						capture="environment"
-						@change="handlePreviewImage"
-						class="hidden"
-					/>
-				</div>
-				<img id="imagePreview" src="#" alt="Scanned receipt image" class="hidden h-64 w-52 object-contain"/>
-				<button id="submitButton" type="submit" class="bg-blue-950 border rounded-lg text-white w-min px-4 py-1 hidden">Next</button>
-			</form>
-		</div>
+		@ReceiptTable(models.MockReceipt)
+		// <div id="formContainer" class="mt-32 flex">
+		// 	<form
+		// 		method="POST"
+		// 		enctype="multipart/form-data"
+		// 		hx-post="/scanReceipt"
+		// 		hx-push-url="true"
+		// 		hx-swap="outerHTML"
+		// 		hx-target="#formContainer"
+		// 		class="flex flex-col items-center gap-6"
+		// 	>
+		// 		<div class="border border-black p-4" x-data>
+		// 			<label for="receipt" class="cursor-pointer">Scan Receipt</label>
+		// 			<input
+		// 				id="receipt"
+		// 				name="receipt"
+		// 				type="file"
+		// 				accept="image/*"
+		// 				capture="environment"
+		// 				@change="handlePreviewImage"
+		// 				class="hidden"
+		// 			/>
+		// 		</div>
+		// 		<img id="imagePreview" src="#" alt="Scanned receipt image" class="hidden h-64 w-52 object-contain"/>
+		// 		<button id="submitButton" type="submit" class="bg-blue-950 border rounded-lg text-white w-min px-4 py-1 hidden">Next</button>
+		// 	</form>
+		// </div>
 	</div>
 }

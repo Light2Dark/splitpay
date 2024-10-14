@@ -34,121 +34,24 @@ func ReceiptTable(receipt models.Receipt) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<table><thead><tr><th>Description</th><th>Qty</th><th>Price</th></tr></thead> ")
+		templ_7745c5c3_Err = templ.JSONScript("receipt", receipt).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, item := range receipt.Items {
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<tr><td>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var2 string
-			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/receipts.templ`, Line: 19, Col: 19}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td><td>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var3 string
-			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(item.Quantity)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/receipts.templ`, Line: 20, Col: 23}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td><td>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var4 string
-			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f", item.Price))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/receipts.templ`, Line: 21, Col: 41}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td></tr>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<tfoot class=\"border-t border-black font-semibold\"><tr><td colspan=\"2\">Subtotal</td><td>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<script type=\"text/javascript\">\n\t\tconst receipt = JSON.parse(document.getElementById(\"receipt\").textContent)\n\n\t\tdocument.addEventListener('alpine:init', () => {\n\t\t\tAlpine.data('receipt', () => ({\n\t\t\t\treceipt: {\n\t\t\t\t\tItems: receipt.Items,\n\t\t\t\t\tSubtotal: Number(receipt.Subtotal),\n\t\t\t\t\tTaxPercent: Number(receipt.TaxPercent),\n\t\t\t\t\tTaxAmount: Number(receipt.TaxAmount),\n\t\t\t\t\tServiceCharge: Number(receipt.ServiceCharge),\n\t\t\t\t\tTotalAmount: Number(receipt.TotalAmount),\n\t\t\t\t},\n\n\t\t\t\tdeleteItem(itemID) {\n\t\t\t\t\tfor (let i = 0; i < this.receipt.Items.length; i++) {\n\t\t\t\t\t\titem = this.receipt.Items[i]\n\t\t\t\t\t\tif (item.ID === itemID) {\n\t\t\t\t\t\t\tthis.receipt.Items.splice(i, 1)\n\t\t\t\t\t\t\tthis.receipt.Subtotal = this.roundTo2DP(this.receipt.Subtotal - (item.Price * item.Quantity))\n\t\t\t\t\t\t\tthis.receipt.TaxAmount = this.roundTo2DP(this.receipt.Subtotal * (this.receipt.TaxPercent / 100))\n\t\t\t\t\t\t\tthis.receipt.TotalAmount = this.roundTo2DP(this.receipt.Subtotal + this.receipt.TaxAmount + this.receipt.ServiceCharge)\n\t\t\t\t\t\t\tbreak\n\t\t\t\t\t\t}\n\t\t\t\t\t}\t\n\t\t\t\t},\n\n\t\t\t\tmodifyQuantity(itemID, quantity) {\n\t\t\t\t\tfor (let i = 0; i < this.receipt.Items.length; i++) {\n\t\t\t\t\t\titem = this.receipt.Items[i]\n\t\t\t\t\t\tif (item.ID === itemID) {\n\t\t\t\t\t\t\titemPrice = item.Price / item.Quantity\n\t\t\t\t\t\t\tif (quantity < 0 && item.Quantity > 0) {\n\t\t\t\t\t\t\t\tthis.receipt.Items[i].Quantity += quantity\n\t\t\t\t\t\t\t\tthis.receipt.Subtotal = this.roundTo2DP(this.receipt.Subtotal - itemPrice)\n\t\t\t\t\t\t\t} else if (quantity > 0) {\n\t\t\t\t\t\t\t\tthis.receipt.Items[i].Quantity += quantity\n\t\t\t\t\t\t\t\tthis.receipt.Subtotal = this.roundTo2DP(Number(this.receipt.Subtotal) + Number(itemPrice))\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\tbreak\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t},\n\n\t\t\t\troundTo2DP(number) {\n\t\t\t\t\treturn (Math.round(number * 100) / 100).toFixed(2)\n\t\t\t\t}\n\t\t\t}))\n\t\t})\n\t</script><div class=\"w-5/6 mt-20 mb-10\"><table x-data=\"receipt\"><thead><tr><th>Description</th><th>Qty</th><th>Price</th></tr></thead><template x-for=\"item in receipt.Items\"><tr><td><button @click=\"deleteItem(item.ID)\"><i class=\"fa fa-minus-circle\"></i></button>&nbsp;&nbsp;<span x-text=\"item.Name\"></span></td><td><button @click=\"modifyQuantity(item.ID, -1)\"><span class=\"text-xs\">&#9664;</span></button> <span x-text=\"item.Quantity\"></span> <button @click=\"modifyQuantity(item.ID, 1)\"><span class=\"text-xs\">&#9658;</span></button></td><td><input type=\"number\" x-model=\"item.Price\" class=\"w-14 rounded-sm px-0.5 text-right\"></td></tr></template><tfoot class=\"border-t border-black font-semibold\"><tr><td colspan=\"2\">Subtotal</td><td x-text=\"receipt.Subtotal\"></td></tr><tr><td colspan=\"2\">Service Charge</td><td><input type=\"number\" name=\"service-charge\" id=\"service-charge\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var5 string
-		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f", receipt.Subtotal))
+		var templ_7745c5c3_Var2 string
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f", receipt.ServiceCharge))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/receipts.templ`, Line: 27, Col: 47}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/receipts.templ`, Line: 127, Col: 57}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td></tr><tr><td colspan=\"2\">Service Charge</td><td>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var6 string
-		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f", receipt.ServiceCharge))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/receipts.templ`, Line: 31, Col: 52}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td></tr><tr><td colspan=\"2\">Tax (")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var7 string
-		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", receipt.TaxPercent))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/receipts.templ`, Line: 34, Col: 64}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("%)</td><td>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var8 string
-		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f", receipt.TaxAmount))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/receipts.templ`, Line: 35, Col: 48}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td></tr><tr class=\"font-extrabold border-b border-black\"><td colspan=\"2\">Total</td><td>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var9 string
-		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f", receipt.TotalAmount))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/receipts.templ`, Line: 39, Col: 50}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td></tr></tfoot></table>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" class=\"w-14 rounded-sm px-0.5 text-right\"></td></tr><tr><td colspan=\"2\">Tax (<span x-text=\"receipt.TaxPercent\"></span>%)</td><td x-text=\"receipt.TaxAmount\"></td></tr><tr class=\"font-extrabold border-b border-black\"><td colspan=\"2\">Total</td><td x-text=\"receipt.TotalAmount\"></td></tr></tfoot></table><div class=\"mt-10 flex flex-row gap-6 justify-center\"><button class=\"rounded-lg border border-black p-2\">Add Item</button> <button class=\"rounded-lg border border-black p-2\">Share Link</button></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
