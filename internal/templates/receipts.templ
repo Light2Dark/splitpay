@@ -1,9 +1,6 @@
 package templates
 
-import (
-	"fmt"
-	"github.com/Light2Dark/splitpay/models"
-)
+import "github.com/Light2Dark/splitpay/models"
 
 templ ReceiptTable(receipt models.Receipt) {
 	@templ.JSONScript("receipt", receipt)
@@ -31,7 +28,7 @@ templ ReceiptTable(receipt models.Receipt) {
 						item = this.receipt.Items[i]
 						if (item.ID === itemID) {
 							itemPrice = item.Price / item.Quantity
-							if (quantity < 0 && item.Quantity > 0) {
+							if (quantity < 0 && item.Quantity > 1) {
 								this.receipt.Items[i].Quantity += quantity
 								this.receipt.Items[i].Price = this.roundTo2DP(this.receipt.Items[i].Price - itemPrice)
 								this.receipt.Subtotal = this.roundTo2DP(this.receipt.Subtotal - itemPrice)
@@ -47,9 +44,33 @@ templ ReceiptTable(receipt models.Receipt) {
 					}
 				},
 
+				updateServiceCharge() {
+					this.receipt.TotalAmount = this.roundTo2DP(Number(this.receipt.Subtotal) + Number(this.receipt.TaxAmount) + Number(this.receipt.ServiceCharge))
+				},
+
+				updatePrice() {
+					amount = 0
+					for (let i = 0; i < this.receipt.Items.length; i++) {
+						amount += Number(this.receipt.Items[i].Price)
+					}
+					this.receipt.Subtotal = this.roundTo2DP(amount)
+					this.updateAmounts()
+				},
+
 				updateAmounts() {
 					this.receipt.TaxAmount = this.roundTo2DP(this.receipt.Subtotal * (this.receipt.TaxPercent / 100))
 					this.receipt.TotalAmount = this.roundTo2DP(Number(this.receipt.Subtotal) + Number(this.receipt.TaxAmount) + Number(this.receipt.ServiceCharge))
+				},
+
+				addItem() {
+					lastItemID = this.receipt.Items[this.receipt.Items.length - 1].ID
+					this.receipt.Items.push({
+						ID: lastItemID + 1,
+						Name: "food",
+						Quantity: 1,
+						Price: 5
+					})
+					this.updatePrice()
 				},
 
 				roundTo2DP(number) {
@@ -73,7 +94,15 @@ templ ReceiptTable(receipt models.Receipt) {
 						// magic
 						<button @click="deleteItem(item.ID)">
 							<i class="fa fa-minus-circle"></i>
-						</button>&nbsp;&nbsp;<span x-text="item.Name"></span>
+						</button>
+						&nbsp;&nbsp;
+						<input
+							type="text"
+							name="name"
+							id="name"
+							x-model="item.Name"
+							class="w-5/6 rounded-sm px-0.5"
+						/>
 					</td>
 					<td>
 						<button @click="modifyQuantity(item.ID, -1)"><span class="text-xs">&#9664;</span></button>
@@ -83,7 +112,8 @@ templ ReceiptTable(receipt models.Receipt) {
 					<td>
 						<input
 							type="number"
-							x-model="item.Price"
+							x-model.number="item.Price"
+							@input="updatePrice"
 							class="w-14 rounded-sm px-0.5 text-right"
 						/>
 					</td>
@@ -101,7 +131,8 @@ templ ReceiptTable(receipt models.Receipt) {
 							type="number"
 							name="service-charge"
 							id="service-charge"
-							value={ fmt.Sprintf("%.2f", receipt.ServiceCharge) }
+							x-model.number="receipt.ServiceCharge"
+							@input="updateServiceCharge"
 							class="w-14 rounded-sm px-0.5 text-right"
 						/>
 					</td>
@@ -116,8 +147,8 @@ templ ReceiptTable(receipt models.Receipt) {
 				</tr>
 			</tfoot>
 		</table>
-		<div class="mt-10 flex flex-row gap-6 justify-center">
-			<button class="rounded-lg border border-black p-2">Add Item</button>
+		<div x-data="receipt" class="mt-10 flex flex-row gap-6 justify-center">
+			<button @click="addItem" class="rounded-lg border border-black p-2">Add Item</button>
 			<button class="rounded-lg border border-black p-2">Share Link</button>
 		</div>
 	</div>
