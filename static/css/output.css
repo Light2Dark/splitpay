@@ -611,10 +611,6 @@ video {
   width: min-content;
 }
 
-.w-3\/4 {
-  width: 75%;
-}
-
 .cursor-pointer {
   cursor: pointer;
 }
@@ -645,10 +641,6 @@ video {
 
 .rounded-sm {
   border-radius: 0.125rem;
-}
-
-.rounded-md {
-  border-radius: 0.375rem;
 }
 
 .border {
