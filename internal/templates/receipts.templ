@@ -7,7 +7,16 @@ templ ReceiptTable(receipt models.Receipt) {
 	<script type="text/javascript">
 		const receipt = JSON.parse(document.getElementById("receipt").textContent)
 
-		document.addEventListener('alpine:init', () => {
+		if (window.Alpine === undefined) {
+			console.error("Alpine is not loaded")
+			document.addEventListener('alpine:init', () => {
+				initializeReceipts()
+			})
+		} else {
+			initializeReceipts()
+		}
+
+		function initializeReceipts() {
 			Alpine.data('receipt', () => ({
 				receipt: receipt,
 
@@ -77,7 +86,7 @@ templ ReceiptTable(receipt models.Receipt) {
 					return (Math.round(number * 100) / 100).toFixed(2)
 				}
 			}))
-		})
+		}
 	</script>
 	<div x-data="receipt" class="w-5/6 mt-20 mb-10">
 		<table>
@@ -100,7 +109,7 @@ templ ReceiptTable(receipt models.Receipt) {
 							type="text"
 							:name="`itemName-${item.ID}`"
 							x-model="item.Name"
-							class="w-5/6 rounded-sm px-0.5"
+							class="w-5/6 rounded-sm px-0.5 text-sm"
 						/>
 					</td>
 					<td>

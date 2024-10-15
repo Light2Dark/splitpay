@@ -105,7 +105,7 @@ func (app application) scanReceiptHandler(w http.ResponseWriter, r *http.Request
 		itemCount = itemCount + 1
 	}
 
-	// totalAmount is almost always true
+	// totalAmount is almost always true, but the indiv items will be not true, so total will be false.
 	// we need to get a single item price and store that in receipt, to improve accuracy
 	var subtotal float64
 	for _, item := range receipt.Items {
@@ -120,16 +120,16 @@ func (app application) scanReceiptHandler(w http.ResponseWriter, r *http.Request
 
 	if subtotal != receipt.Subtotal {
 		app.logger.Info(fmt.Sprintf("incorrect subtotal by openai, openai: %f, expected: %f", receipt.Subtotal, subtotal))
-		receipt.Subtotal = subtotal
+		receipt.Subtotal = roundTo2DP(subtotal)
 	}
 
 	var taxAmount = roundTo2DP(subtotal * 0.06)
 	if taxAmount != receipt.TaxAmount {
 		app.logger.Info(fmt.Sprintf("incorrect tax amount by openai, openai: %f, expected: %f", receipt.TaxAmount, taxAmount))
-		receipt.TaxAmount = taxAmount
+		receipt.TaxAmount = roundTo2DP(taxAmount)
 	}
 
-	var totalAmountExpected = subtotal + taxAmount + receipt.ServiceCharge
+	var totalAmountExpected = roundTo2DP(subtotal + taxAmount + receipt.ServiceCharge)
 	if totalAmountExpected != receipt.TotalAmount {
 		app.logger.Info(fmt.Sprintf("incorrect total amount by openai, openai: %f, expected: %f", receipt.TotalAmount, totalAmountExpected))
 	}
@@ -187,6 +187,7 @@ func imageFileToBase64(file multipart.File) (string, error) {
 	return base64Encoding, nil
 }
 
+// TODO: Change to truncate(?)
 func roundTo2DP(val float64) float64 {
 	return math.Round(val*100) / 100
 }
