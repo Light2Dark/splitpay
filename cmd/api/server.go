@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/Light2Dark/splitpay/models"
 	"github.com/joho/godotenv"
 	"github.com/lmittmann/tint"
 	"github.com/sashabaranov/go-openai"
@@ -18,10 +17,10 @@ import (
 )
 
 type application struct {
-	logger  *slog.Logger
-	db      *sql.DB
-	openai  *openai.Client
-	receipt models.Receipt // not sure if this is a good idea but I don't want to incur I/O + db req costs
+	logger *slog.Logger
+	db     *sql.DB
+	openai *openai.Client
+	env    string
 }
 
 func main() {
@@ -33,8 +32,10 @@ func main() {
 		slog.Info(".env file not detected")
 	}
 
+	var env string = "PROD"
 	var logLevel = slog.LevelInfo
 	if os.Getenv("ENVIRONMENT") == "DEV" {
+		env = "DEV"
 		logLevel = slog.LevelDebug
 	}
 
@@ -70,10 +71,10 @@ func main() {
 	openai_client := openai.NewClient(openai_token)
 
 	app := application{
-		logger:  logger,
-		db:      db,
-		openai:  openai_client,
-		receipt: models.MockReceipt, // temp
+		logger: logger,
+		db:     db,
+		openai: openai_client,
+		env:    env,
 	}
 
 	router := http.NewServeMux()
@@ -87,8 +88,6 @@ func main() {
 	router.HandleFunc("GET /healthcheck", app.healthcheckHandler)
 	router.HandleFunc("GET /", app.indexHandler)
 	router.HandleFunc("POST /scanReceipt", app.scanReceiptHandler)
-
-	router.HandleFunc("DELETE /deleteItem/{itemNum}", app.deleteItemHandler)
 
 	server := http.Server{
 		Addr:    fmt.Sprintf(":%d", *port),

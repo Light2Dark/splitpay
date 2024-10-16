@@ -29,7 +29,7 @@ func (app application) dataHandler(w http.ResponseWriter, r *http.Request) {
 		splits = append(splits, split)
 	}
 
-	app.logger.Info("success query", "splitsc", splits)
+	app.logger.Info("success query", "splits", splits)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(&healthResponse{Status: "200 received bro"})

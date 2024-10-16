@@ -3,12 +3,13 @@ package main
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"math"
+	"math/rand"
 	"mime/multipart"
 	"net/http"
-	"strconv"
 
 	"github.com/Light2Dark/splitpay/internal/templates"
 	"github.com/Light2Dark/splitpay/models"
@@ -38,10 +39,15 @@ func (app application) scanReceiptHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	var model = openai.GPT4o
+	if app.env == "DEV" {
+		model = openai.GPT4oMini
+	}
+
 	resp, err := app.openai.CreateChatCompletion(
 		r.Context(),
 		openai.ChatCompletionRequest{
-			Model:     openai.GPT4o,
+			Model:     model,
 			MaxTokens: 1000,
 			Messages: []openai.ChatCompletionMessage{
 				{Role: openai.ChatMessageRoleUser,
@@ -134,29 +140,30 @@ func (app application) scanReceiptHandler(w http.ResponseWriter, r *http.Request
 		app.logger.Info(fmt.Sprintf("incorrect total amount by openai, openai: %f, expected: %f", receipt.TotalAmount, totalAmountExpected))
 	}
 
-	app.receipt = receipt
-	templates.ReceiptTable(receipt).Render(r.Context(), w)
-}
-
-func (app application) deleteItemHandler(w http.ResponseWriter, r *http.Request) {
-	itemNumStr := r.PathValue("itemNum")
-	itemNum, err := strconv.Atoi(itemNumStr)
+	itemsJson, err := json.Marshal(receipt.Items)
 	if err != nil {
-		app.logger.Error("non-integer passed to delete item handler", "itemNum", itemNumStr)
-		return
+		app.logger.Error("unable to marshal json", "error", err)
+	}
+	row := app.db.QueryRow(`
+		INSERT INTO receipts (items, subtotal, serviceCharge, taxPercent, taxAmount, totalAmount)
+		VALUES(?, ?, ?, ?, ?, ?)
+		RETURNING id;
+	`, string(itemsJson), receipt.Subtotal, receipt.ServiceCharge, receipt.TaxPercent, receipt.TaxAmount, receipt.TotalAmount)
+
+	var id int
+	err = row.Scan(&id)
+
+	if err != nil {
+		app.logger.Error("error executing query", "err", err)
 	}
 
-	for ind, item := range app.receipt.Items {
-		if item.ID == itemNum {
-			app.receipt.Items = append(app.receipt.Items[:ind], app.receipt.Items[ind+1:]...)
-			app.receipt.Subtotal = app.receipt.Subtotal - (item.Price * float64(item.Quantity))
-			app.receipt.TaxAmount = app.receipt.Subtotal * float64(app.receipt.TaxPercent)
-			app.receipt.TotalAmount = app.receipt.Subtotal + app.receipt.TaxAmount + app.receipt.ServiceCharge
-			break
-		}
+	key := generateShortKey(9)
+	_, err = app.db.Exec(`INSERT INTO splits (link, receipt_id) VALUES(?, ?)`, key, id)
+	if err != nil {
+		app.logger.Error("Unable to store receipt in splits table", "error", err)
 	}
 
-	app.logger.Info("deleted", "receipt", app.receipt)
+	templates.ReceiptTable(receipt).Render(r.Context(), w)
 }
 
 func toBase64(b []byte) string {
@@ -190,4 +197,15 @@ func imageFileToBase64(file multipart.File) (string, error) {
 // TODO: Change to truncate(?)
 func roundTo2DP(val float64) float64 {
 	return math.Round(val*100) / 100
+}
+
+// TODO: not the right way to store this info, chance of collision
+func generateShortKey(keyLength int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+	shortKey := make([]byte, keyLength)
+	for i := range shortKey {
+		shortKey[i] = charset[rand.Intn(len(charset))]
+	}
+	return string(shortKey)
 }

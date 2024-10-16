@@ -88,7 +88,7 @@ templ ReceiptTable(receipt models.Receipt) {
 			}))
 		}
 	</script>
-	<div x-data="receipt" class="w-5/6 mt-20 mb-10">
+	<div x-data="receipt" class="w-5/6 mt-14 mb-10">
 		<table>
 			<thead>
 				<tr>
@@ -157,7 +157,7 @@ templ ReceiptTable(receipt models.Receipt) {
 		</table>
 		<div class="mt-10 flex flex-row gap-6 justify-center">
 			<button @click="addItem" class="rounded-lg border border-black p-2">Add Item</button>
-			<button class="rounded-lg border border-black p-2">Share Link</button>
+			<button @click="alert('clicked!')" class="rounded-lg border border-black p-2">Share Link</button>
 		</div>
 	</div>
 }
