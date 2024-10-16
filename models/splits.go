@@ -17,27 +17,28 @@ type ReceiptOpenAI struct {
 	TotalAmount   float64 `json:"totalAmount"`
 }
 
+type ReceiptItem struct {
+	ID       int     `json:"ID"`
+	Name     string  `json:"Name"`
+	Quantity int     `json:"Quantity"`
+	Price    float64 `json:"Price"`
+}
+
 type Receipt struct {
-	Items []struct {
-		ID       int
-		Name     string
-		Quantity int
-		Price    float64
-	}
-	Subtotal      float64
-	ServiceCharge float64
-	TaxPercent    int
-	TaxAmount     float64
-	TotalAmount   float64
+	ID            int           `json:"ID"`
+	Link          string        `json:"Link"`
+	Items         []ReceiptItem `json:"Items"`
+	Subtotal      float64       `json:"Subtotal"`
+	ServiceCharge float64       `json:"ServiceCharge"`
+	TaxPercent    int           `json:"TaxPercent"`
+	TaxAmount     float64       `json:"TaxAmount"`
+	TotalAmount   float64       `json:"TotalAmount"`
 }
 
 var MockReceipt = Receipt{
-	Items: []struct {
-		ID       int
-		Name     string
-		Quantity int
-		Price    float64
-	}{
+	ID:   1, // test data
+	Link: "1212klkml",
+	Items: []ReceiptItem{
 		{ID: 1, Name: "Item1", Quantity: 2, Price: 8.40},
 		{ID: 2, Name: "Item2", Quantity: 1, Price: 5.75},
 		{ID: 3, Name: "Item3", Quantity: 3, Price: 15.00},

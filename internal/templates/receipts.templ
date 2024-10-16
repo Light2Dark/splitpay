@@ -82,13 +82,49 @@ templ ReceiptTable(receipt models.Receipt) {
 					this.updatePrice()
 				},
 
+				handleKeyDown(e) {
+					if (e.key === "Enter") {
+						e.preventDefault()
+					}
+				},
+				
+				async saveReceipt(e) {
+					e.preventDefault()
+					// set numeric fields to 2 decimal places
+					this.receipt.Subtotal = this.roundTo2DP(this.receipt.Subtotal)
+					this.receipt.TaxAmount = this.roundTo2DP(this.receipt.TaxAmount)
+					this.receipt.TotalAmount = this.roundTo2DP(this.receipt.TotalAmount)
+					this.receipt.ServiceCharge = this.roundTo2DP(this.receipt.ServiceCharge)
+					for (let i = 0; i < this.receipt.Items.length; i++) {
+						this.receipt.Items[i].Price = this.roundTo2DP(this.receipt.Items[i].Price)
+					}
+
+					fetch("/saveReceipt", {
+						method: "PUT",
+						headers: {
+							"Content-Type": "application/json"
+						},
+						body: JSON.stringify(receipt)
+					})
+					.then(response => response.json())
+					.then(data => {
+						alert("Receipt saved successfully, please share the link below")
+						document.getElementById("shareLink").textContent = window.location.href + "view/" + receipt.Link
+					})
+				},
+
 				roundTo2DP(number) {
-					return (Math.round(number * 100) / 100).toFixed(2)
+					return Number((Math.round(number * 100) / 100).toFixed(2))
 				}
 			}))
 		}
 	</script>
-	<div x-data="receipt" class="w-5/6 mt-14 mb-10">
+	<form
+		@submit="saveReceipt"
+		x-data="receipt"
+		@keydown="handleKeyDown"
+		class="w-5/6 mt-14 mb-10"
+	>
 		<table>
 			<thead>
 				<tr>
@@ -101,7 +137,7 @@ templ ReceiptTable(receipt models.Receipt) {
 				<tr>
 					<td>
 						// magic
-						<button @click="deleteItem(item.ID)">
+						<button type="button" @click="deleteItem(item.ID)">
 							<i class="fa fa-minus-circle"></i>
 						</button>
 						&nbsp;&nbsp;
@@ -113,14 +149,15 @@ templ ReceiptTable(receipt models.Receipt) {
 						/>
 					</td>
 					<td>
-						<button @click="modifyQuantity(item.ID, -1)"><span class="text-xs">&#9664;</span></button>
+						<button type="button" @click="modifyQuantity(item.ID, -1)"><span class="text-xs">&#9664;</span></button>
 						<span x-text="item.Quantity"></span>
-						<button @click="modifyQuantity(item.ID, 1)"><span class="text-xs">&#9658;</span></button>
+						<button type="button" @click="modifyQuantity(item.ID, 1)"><span class="text-xs">&#9658;</span></button>
 					</td>
 					<td>
 						<input
 							:name="`itemPrice-${item.ID}`"
 							type="number"
+							step="0.01"
 							x-model.number="item.Price"
 							@input="updatePrice"
 							class="w-14 rounded-sm px-0.5 text-right"
@@ -139,6 +176,7 @@ templ ReceiptTable(receipt models.Receipt) {
 						<input
 							type="number"
 							name="service-charge"
+							step="0.01"
 							x-model.number="receipt.ServiceCharge"
 							@input="updateServiceCharge"
 							class="w-14 rounded-sm px-0.5 text-right"
@@ -156,8 +194,9 @@ templ ReceiptTable(receipt models.Receipt) {
 			</tfoot>
 		</table>
 		<div class="mt-10 flex flex-row gap-6 justify-center">
-			<button @click="addItem" class="rounded-lg border border-black p-2">Add Item</button>
-			<button @click="alert('clicked!')" class="rounded-lg border border-black p-2">Share Link</button>
+			<button type="button" @click="addItem" class="rounded-lg border border-black p-2">Add Item</button>
+			<button type="submit" class="rounded-lg border border-black p-2">Share Link</button>
 		</div>
-	</div>
+	</form>
+	<p id="shareLink"></p>
 }

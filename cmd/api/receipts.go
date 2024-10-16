@@ -96,12 +96,7 @@ func (app application) scanReceiptHandler(w http.ResponseWriter, r *http.Request
 
 	var itemCount int = 1
 	for _, item := range receiptOpenAI.Items {
-		var itemAI = struct {
-			ID       int
-			Name     string
-			Quantity int
-			Price    float64
-		}{
+		var itemAI = models.ReceiptItem{
 			ID:       itemCount,
 			Name:     item.Name,
 			Quantity: item.Quantity,
@@ -130,6 +125,7 @@ func (app application) scanReceiptHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	var taxAmount = roundTo2DP(subtotal * 0.06)
+	receipt.TaxPercent = 6 // hardcode for now
 	if taxAmount != receipt.TaxAmount {
 		app.logger.Info(fmt.Sprintf("incorrect tax amount by openai, openai: %f, expected: %f", receipt.TaxAmount, taxAmount))
 		receipt.TaxAmount = roundTo2DP(taxAmount)
@@ -156,12 +152,14 @@ func (app application) scanReceiptHandler(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		app.logger.Error("error executing query", "err", err)
 	}
+	receipt.ID = id
 
 	key := generateShortKey(9)
 	_, err = app.db.Exec(`INSERT INTO splits (link, receipt_id) VALUES(?, ?)`, key, id)
 	if err != nil {
 		app.logger.Error("Unable to store receipt in splits table", "error", err)
 	}
+	receipt.Link = key
 
 	templates.ReceiptTable(receipt).Render(r.Context(), w)
 }

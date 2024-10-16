@@ -34,3 +34,44 @@ func (app application) dataHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(&healthResponse{Status: "200 received bro"})
 }
+
+type saveReceiptResponse struct {
+	Message string `json:"message"`
+}
+
+func (app application) saveReceiptHandler(w http.ResponseWriter, r *http.Request) {
+	var receipt models.Receipt
+	err := json.NewDecoder(r.Body).Decode(&receipt)
+	if err != nil {
+		app.logger.Error("unable to save receipt", "error", err)
+		json.NewEncoder(w).Encode(&saveReceiptResponse{Message: err.Error()})
+		return
+	}
+
+	itemsBytes, err := json.Marshal(&receipt.Items)
+	if err != nil {
+		app.logger.Error("unable to marshal receipt items", "error", err)
+		json.NewEncoder(w).Encode(&saveReceiptResponse{Message: err.Error()})
+		return
+	}
+
+	_, err = app.db.Exec(`
+		UPDATE receipts
+		SET items = ?,
+			subtotal = ?,
+			serviceCharge = ?,
+			taxPercent = ?,
+			taxAmount = ?,
+			totalAmount = ?
+		WHERE id = ?;
+	`, string(itemsBytes), receipt.Subtotal, receipt.ServiceCharge, receipt.TaxPercent, receipt.TaxAmount, receipt.TotalAmount, receipt.ID)
+
+	if err != nil {
+		app.logger.Error("update receipts table failed", "error", err)
+		json.NewEncoder(w).Encode(&saveReceiptResponse{Message: err.Error()})
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(&saveReceiptResponse{Message: "OK"})
+}
