@@ -97,10 +97,13 @@ func (app application) scanReceiptHandler(w http.ResponseWriter, r *http.Request
 	var itemCount int = 1
 	for _, item := range receiptOpenAI.Items {
 		var itemAI = models.ReceiptItem{
-			ID:       itemCount,
-			Name:     item.Name,
-			Quantity: item.Quantity,
-			Price:    item.Price,
+			ReceiptItemBase: models.ReceiptItemBase{
+				ID:       itemCount,
+				Name:     item.Name,
+				Quantity: item.Quantity,
+				Price:    item.Price,
+			},
+			PaidCount: 0,
 		}
 		receipt.Items = append(receipt.Items, itemAI)
 		itemCount = itemCount + 1

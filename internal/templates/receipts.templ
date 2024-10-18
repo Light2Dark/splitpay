@@ -88,6 +88,7 @@ templ ReceiptTable(receipt models.Receipt) {
 					}
 				},
 				
+				// TODO: is there a better way to handle this + not hardcode the redirection link
 				async saveReceipt(e) {
 					e.preventDefault()
 					// set numeric fields to 2 decimal places
@@ -109,7 +110,7 @@ templ ReceiptTable(receipt models.Receipt) {
 					.then(response => response.json())
 					.then(data => {
 						alert("Receipt saved successfully, please share the link below")
-						document.getElementById("shareLink").textContent = window.location.href + "view/" + receipt.Link
+						document.getElementById("shareLink").textContent = window.location.href + "viewReceipt/" + receipt.Link
 					})
 				},
 

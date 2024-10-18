@@ -2,38 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/Light2Dark/splitpay/internal/templates"
 	"github.com/Light2Dark/splitpay/models"
 )
-
-func (app application) dataHandler(w http.ResponseWriter, r *http.Request) {
-	rows, err := app.db.Query("SELECT * FROM splits")
-	if err != nil {
-		app.logger.Error("failed to execute query", "error", err)
-		templates.Error(fmt.Sprintf("Error: %s", err)).Render(r.Context(), w)
-		return
-	}
-	defer rows.Close()
-
-	var splits []models.Splits
-	for rows.Next() {
-		var split models.Splits
-		if err := rows.Scan(&split.ID, &split.Link); err != nil {
-			app.logger.Error("failed to scan row", "error", err)
-			templates.Error(fmt.Sprintf("Error: %s", err)).Render(r.Context(), w)
-			return
-		}
-		splits = append(splits, split)
-	}
-
-	app.logger.Info("success query", "splits", splits)
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(&healthResponse{Status: "200 received bro"})
-}
 
 type saveReceiptResponse struct {
 	Message string `json:"message"`
@@ -74,4 +48,78 @@ func (app application) saveReceiptHandler(w http.ResponseWriter, r *http.Request
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(&saveReceiptResponse{Message: "OK"})
+}
+
+func (app application) viewReceiptHandler(w http.ResponseWriter, r *http.Request) {
+	receiptLink := r.PathValue("receiptLink")
+	app.logger.Info("receipt link", "receiptLink", receiptLink)
+
+	// templates.PaymentView("1", 0, map[int]int{1: 2, 2: 3}).Render(r.Context(), w)
+	// return
+
+	// TODO: get receipt from DB
+	var receipt = models.MockReceipt
+	var newReceipt models.ReceiptView
+
+	var serviceChargePercent = int(receipt.ServiceCharge * 100 / receipt.Subtotal)
+	app.logger.Info("service charge percent", "val", serviceChargePercent)
+
+	var viewItems []models.ReceiptViewItem
+
+	for _, item := range receipt.Items {
+		var paidCount = item.PaidCount
+		for range item.Quantity {
+			var newItem models.ReceiptViewItem
+
+			singleItemPrice := (item.Price / float64(item.Quantity))
+			singleItemPrice = singleItemPrice + (singleItemPrice * float64(serviceChargePercent) / 100)
+			singleItemPrice = singleItemPrice + (singleItemPrice * float64(receipt.TaxPercent) / 100)
+			newItem.Price = roundTo2DP(singleItemPrice)
+			newItem.ID = item.ID
+			newItem.Quantity = 1
+			newItem.Name = item.Name
+
+			if paidCount > 0 {
+				newItem.Paid = true
+				paidCount = paidCount - 1
+			} else {
+				newItem.Paid = false
+			}
+			viewItems = append(viewItems, newItem)
+		}
+	}
+	newReceipt.Items = viewItems
+	newReceipt.TotalAmount = receipt.TotalAmount
+	newReceipt.ID = receipt.ID
+
+	templates.ReceiptLayout(newReceipt).Render(r.Context(), w)
+}
+
+// todo: they will pass back item ID of the thing they clicked?
+// we will save that in DB that the item is paid?
+// paid counter
+
+func (app application) payReceiptHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+
+	// TODO: get paidCount from DB
+
+	var receiptID string
+	var itemsIDToPaidCount = make(map[int]int)
+	for key, values := range r.Form {
+		if key == "receiptID" {
+			receiptID = values[0]
+			continue
+		}
+
+		itemID, err := strconv.Atoi(key)
+		if err != nil {
+			app.logError(w, r, "non-int values returned from form", err)
+		}
+
+		numItemsChecked := len(values)
+		itemsIDToPaidCount[itemID] += numItemsChecked
+	}
+
+	templates.PaymentView(receiptID, 0, itemsIDToPaidCount).Render(r.Context(), w)
 }

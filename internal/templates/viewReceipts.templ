@@ -1,0 +1,98 @@
+package templates
+
+import (
+	"fmt"
+	"github.com/Light2Dark/splitpay/models"
+)
+
+templ ReceiptLayout(receipt models.ReceiptView) {
+	@Layout(ContainerDiv(ReceiptView(receipt)))
+}
+
+templ ReceiptView(receipt models.ReceiptView) {
+	<div
+		class="w-5/6 mb-10"
+		x-data="{
+		selectedAmount: 0.00,
+		updateSelectedAmount() {
+			let rowsWithChecked = document.querySelectorAll(`input[type='checkbox']:checked`);
+			let newAmount = 0;
+			rowsWithChecked.forEach(row => {
+				let priceCell = row.closest('tr').querySelector('td:nth-child(3) p');
+				if (priceCell) {
+					newAmount += parseFloat(priceCell.textContent);
+				}
+			});
+			this.selectedAmount = newAmount.toFixed(2);
+		},
+	}"
+	>
+		<form method="POST" hx-post="/payReceipt" hx-vals={ fmt.Sprintf(`{"receiptID": "%d"}`, receipt.ID) }>
+			<p class="mt-4 text-center text-sm">(Tax-included receipt)</p>
+			<table class="mt-10">
+				<thead>
+					<tr>
+						<th>Description</th>
+						<th>Qty</th>
+						<th>Price</th>
+					</tr>
+				</thead>
+				for i, item := range receipt.Items {
+					<tr>
+						<td class="flex flex-row gap-1 justify-center">
+							<input
+								type="checkbox"
+								disabled?={ item.Paid }
+								@click="updateSelectedAmount"
+								name={ fmt.Sprintf("%d", item.ID) }
+								id={ fmt.Sprintf("itemCheckbox-%d", i) }
+							/>
+							@StrikedText(item.Paid) {
+								<label for={ fmt.Sprintf("%d", item.ID) }>
+									<p class="text-sm">{ item.Name }</p>
+								</label>
+							}
+						</td>
+						<td>
+							@StrikedText(item.Paid) {
+								<span>{ fmt.Sprint(item.Quantity) }</span>
+							}
+						</td>
+						<td>
+							@StrikedText(item.Paid) {
+								<p>{ fmt.Sprintf("%.2f", item.Price) }</p>
+							}
+						</td>
+					</tr>
+				}
+				<tfoot class="border-t border-black font-semibold">
+					<tr class="font-extrabold border-b border-black">
+						<td colspan="2">Total</td>
+						<td>{ fmt.Sprintf("%.2f", receipt.TotalAmount) }</td>
+					</tr>
+				</tfoot>
+			</table>
+			<div class="flex flex-col items-center mt-6 gap-6">
+				<p>You owe <b x-text="selectedAmount"></b></p>
+				<button
+					type="submit"
+					class="border border-black rounded-md bg-black text-white w-min px-3 py-1"
+				>Pay</button>
+			</div>
+		</form>
+	</div>
+}
+
+templ StrikedText(isStriked bool) {
+	if isStriked {
+		<s>
+			{ children... }
+		</s>
+	} else {
+		{ children... }
+	}
+}
+
+func orderOptions(receiptID int) string {
+	return fmt.Sprintf(`{'receiptID': '%d'}`, receiptID)
+}
