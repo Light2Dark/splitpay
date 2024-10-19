@@ -31,7 +31,7 @@ func (app application) saveReceiptHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	var serviceChargePercent = int(receipt.ServiceCharge * 100 / receipt.Subtotal)
+	var serviceChargePercent = getServiceChargePercent(receipt.ServiceCharge, receipt.Subtotal)
 	app.logger.Info("service charge percent", "val", serviceChargePercent)
 
 	_, err = app.db.Exec(`
@@ -71,7 +71,8 @@ func (app application) viewReceiptHandler(w http.ResponseWriter, r *http.Request
 	err := row.Scan(&receipt.ID, &receipt.Link, &itemsStr, &receipt.Subtotal, &receipt.ServiceCharge, &receipt.ServiceChargePercent, &receipt.TaxPercent, &receipt.TaxAmount, &receipt.TotalAmount)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			app.logError(w, r, "Sorry, this receipt does not exist.", err)
+			app.logger.Info("Receipt does not exist", "error", err, "link", receiptLink)
+			templates.ErrorLayout("Sorry, this receipt does not exist").Render(r.Context(), w)
 			return
 		} else {
 			app.logError(w, r, "Internal error", err)
@@ -201,4 +202,8 @@ func (app application) markPaidHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	templates.PaymentResult().Render(r.Context(), w)
+}
+
+func getServiceChargePercent(serviceCharge float64, subtotal float64) int {
+	return  int(serviceCharge * 100 / subtotal)
 }

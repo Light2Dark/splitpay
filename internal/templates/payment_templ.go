@@ -42,7 +42,7 @@ func PaymentView(totalAmount string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</b></p><div class=\"flex flex-col gap-2\"><h1 class=\"font-bold\">Payment methods:</h1><ol type=\"1\" class=\"list-decimal flex flex-col gap-2 ml-6\"><li>DuitNow at <b>0129706869</b></li><li>TouchNGo at <b>0129706869</b></li><li>Bank Transfer<p class=\"text-sm\">GXBank</p><p class=\"text-sm\">A/C: 5333 4994 9317 2564</p></li></ol></div><button hx-post=\"/markPaid\" hx-target=\"#paymentView\" hx-push-url=\"true\" class=\"border border-black rounded-md bg-black text-white w-32 px-3 py-1 self-center\">Mark as paid</button></div>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</b></p><div class=\"flex flex-col gap-2\"><h1 class=\"font-bold\">Payment methods:</h1><ol type=\"1\" class=\"list-decimal flex flex-col gap-2 ml-6 text-sm\"><li>GrabPay / Card</li><stripe-buy-button buy-button-id=\"buy_btn_1QBeP704E2trhTmV3byVVB1i\" publishable-key=\"pk_live_51Q60BW04E2trhTmVnw3jopGJwmSIRw1dKjJYFjiJZsm2suWpQIrF9L3xYl33QYV3xn3a4ExKFnKYmfZqyNGAbayJ00zNeCcsdW\"></stripe-buy-button><li>DuitNow / TouchNGo at <b>0129706869</b></li><li>Bank Transfer<p class=\"text-xs\">GXBank</p><p class=\"text-xs\">A/C: 5333 4994 9317 2564</p></li></ol></div><button hx-post=\"/markPaid\" hx-target=\"#paymentView\" hx-push-url=\"true\" class=\"border border-black rounded-md bg-black text-white w-32 px-3 py-1 self-center\">Mark as paid</button></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

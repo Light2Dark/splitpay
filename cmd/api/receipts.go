@@ -139,15 +139,18 @@ func (app application) scanReceiptHandler(w http.ResponseWriter, r *http.Request
 		app.logger.Info(fmt.Sprintf("incorrect total amount by openai, openai: %f, expected: %f", receipt.TotalAmount, totalAmountExpected))
 	}
 
+	var serviceChargePercent = getServiceChargePercent(receipt.ServiceCharge, receipt.Subtotal)
+	app.logger.Info("service charge percent", "val", serviceChargePercent)
+
 	itemsJson, err := json.Marshal(receipt.Items)
 	if err != nil {
 		app.logger.Error("unable to marshal json", "error", err)
 	}
 	row := app.db.QueryRow(`
-		INSERT INTO receipts (items, subtotal, serviceCharge, taxPercent, taxAmount, totalAmount)
-		VALUES(?, ?, ?, ?, ?, ?)
+		INSERT INTO receipts (items, subtotal, serviceCharge, serviceChargePercent, taxPercent, taxAmount, totalAmount)
+		VALUES(?, ?, ?, ?, ?, ?, ?)
 		RETURNING id;
-	`, string(itemsJson), receipt.Subtotal, receipt.ServiceCharge, receipt.TaxPercent, receipt.TaxAmount, receipt.TotalAmount)
+	`, string(itemsJson), receipt.Subtotal, receipt.ServiceCharge, serviceChargePercent, receipt.TaxPercent, receipt.TaxAmount, receipt.TotalAmount)
 
 	var id int
 	err = row.Scan(&id)

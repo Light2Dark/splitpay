@@ -50,6 +50,7 @@ templ ReceiptView(receipt models.ReceiptView) {
 			method="POST"
 			hx-post="/payReceipt"
 			hx-target="#secondForm"
+			hx-push-url="true"
 			:hx-vals="JSON.stringify({ receiptID: receipt.ID, totalAmount: totalAmount })"
 		>
 			<div id="secondForm"></div>
