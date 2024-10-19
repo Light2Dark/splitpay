@@ -586,6 +586,18 @@ video {
   margin-top: 1.5rem;
 }
 
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
+.ml-10 {
+  margin-left: 2.5rem;
+}
+
+.mb-0 {
+  margin-bottom: 0px;
+}
+
 .flex {
   display: flex;
 }
@@ -745,6 +757,10 @@ video {
   padding: 1rem;
 }
 
+.p-0 {
+  padding: 0px;
+}
+
 .px-0\.5 {
   padding-left: 0.125rem;
   padding-right: 0.125rem;
@@ -763,6 +779,38 @@ video {
 .py-1 {
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
+}
+
+.pl-2 {
+  padding-left: 0.5rem;
+}
+
+.pl-10 {
+  padding-left: 2.5rem;
+}
+
+.pl-4 {
+  padding-left: 1rem;
+}
+
+.pl-8 {
+  padding-left: 2rem;
+}
+
+.pl-6 {
+  padding-left: 1.5rem;
+}
+
+.pb-0 {
+  padding-bottom: 0px;
+}
+
+.pb-1 {
+  padding-bottom: 0.25rem;
+}
+
+.pb-0\.5 {
+  padding-bottom: 0.125rem;
 }
 
 .text-center {
@@ -830,4 +878,8 @@ tr td:first-child {
   text-align: left;
   width: 55%;
   /* Force description column to take more space */
+}
+
+.\[\&\>td\]\:pb-0>td {
+  padding-bottom: 0px;
 }

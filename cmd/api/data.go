@@ -93,11 +93,16 @@ func (app application) viewReceiptHandler(w http.ResponseWriter, r *http.Request
 		var paidCount = item.PaidCount
 		for range item.Quantity {
 			var newItem models.ReceiptViewItem
-
 			singleItemPrice := (item.Price / float64(item.Quantity))
-			singleItemPrice = singleItemPrice + (singleItemPrice * float64(receipt.ServiceChargePercent) / 100)
-			singleItemPrice = singleItemPrice + (singleItemPrice * float64(receipt.TaxPercent) / 100)
-			newItem.Price = roundTo2DP(singleItemPrice)
+
+			serviceCharge := (singleItemPrice * float64(receipt.ServiceChargePercent) / 100)
+			taxAmount := (singleItemPrice * float64(receipt.TaxPercent) / 100)
+
+			newItem.TaxAmount = taxAmount
+			newItem.ServiceCharge = serviceCharge
+
+			newItem.Price = singleItemPrice
+			newItem.FinalPrice = roundTo2DP(singleItemPrice + taxAmount + serviceCharge)
 			newItem.ID = item.ID
 			newItem.Quantity = 1
 			newItem.Name = item.Name

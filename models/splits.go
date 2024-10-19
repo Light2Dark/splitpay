@@ -30,7 +30,10 @@ type ReceiptItem struct {
 
 type ReceiptViewItem struct {
 	ReceiptItemBase
-	Paid bool `json:"Paid"`
+	FinalPrice    float64 `json:"FinalPrice"`
+	TaxAmount     float64 `json:"TaxAmount"`
+	ServiceCharge float64 `json:"ServiceCharge"`
+	Paid          bool    `json:"Paid"`
 }
 
 type Receipt struct {
@@ -57,14 +60,14 @@ type ReceiptOpenAI struct {
 
 var MockReceipt = Receipt{
 	ReceiptBase: ReceiptBase{
-		ID:            1,
-		Link:          "12121212kl",
-		Subtotal:      29.15,
-		ServiceCharge: 2.92,
+		ID:                   1,
+		Link:                 "12121212kl",
+		Subtotal:             29.15,
+		ServiceCharge:        2.92,
 		ServiceChargePercent: 10,
-		TaxPercent:    6,
-		TaxAmount:     1.92,
-		TotalAmount:   33.99,
+		TaxPercent:           6,
+		TaxAmount:            1.92,
+		TotalAmount:          33.99,
 	},
 	Items: []ReceiptItem{
 		{ReceiptItemBase: ReceiptItemBase{ID: 1, Name: "Item1", Quantity: 2, Price: 8.40}, PaidCount: 0},

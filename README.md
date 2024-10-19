@@ -8,6 +8,7 @@ A way to easily split your bills. Built with go-starter.
 - Scan a receipt, OpenAI will extract the items and prices
 - Edit receipts to add/remove items or change prices
 - Get a shareable link to the receipt
+- Pay with Stripe! (And my poor wallet for Stripe fees :sob:)
 - Split the bill with your friends!
 - Paid items are marked
 

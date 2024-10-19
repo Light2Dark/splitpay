@@ -65,7 +65,7 @@ templ ReceiptView(receipt models.ReceiptView) {
 						</tr>
 					</thead>
 					for i, item := range receipt.Items {
-						<tr>
+						<tr class="[&>td]:pb-0">
 							<td nowrap class="flex flex-row gap-1">
 								<input
 									type="checkbox"
@@ -87,9 +87,12 @@ templ ReceiptView(receipt models.ReceiptView) {
 							</td>
 							<td>
 								@StrikedText(item.Paid) {
-									<p>{ fmt.Sprintf("%.2f", item.Price) }</p>
+									<p>{ fmt.Sprintf("%.2f", item.FinalPrice) }</p>
 								}
 							</td>
+						</tr>
+						<tr>
+							<td class="text-xs p-0 pl-6 pb-0.5" colspan="3">({ printBreakdown(item.Price, item.ServiceCharge, item.TaxAmount) })</td>
 						</tr>
 					}
 					<tfoot class="border-t border-black font-semibold">
@@ -120,4 +123,12 @@ templ StrikedText(isStriked bool) {
 
 func orderOptions(receiptID int) string {
 	return fmt.Sprintf(`{'receiptID': '%d'}`, receiptID)
+}
+
+func printIn2DP(value float64) string {
+	return fmt.Sprintf("%.2f", value)
+}
+
+func printBreakdown(price, serviceCharge, taxAmount float64) string {
+	return fmt.Sprintf("%.2f + %.2f + %.2f GST", price, serviceCharge, taxAmount)
 }
