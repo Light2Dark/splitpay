@@ -8,6 +8,9 @@ setup-mac:
 	go install github.com/a-h/templ/cmd/templ@latest
 	go mod download
 
+	touch local-sqlite.db
+	make run-migrations-up
+
 setup:
 	curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-x64
 	chmod +x tailwindcss-linux-x64
@@ -18,6 +21,19 @@ setup:
 	go install github.com/bokwoon95/wgo@latest
 	go install github.com/a-h/templ/cmd/templ@latest
 	go mod download
+
+	touch local-sqlite.db
+	make run-migrations-up
+
+run-migrations-up:
+	for file in migrations/*-up.sql; do \
+		sqlite3 local-sqlite.db < $$file; \
+	done
+
+run-migrations-down:
+	for file in migrations/*-down.sql; do \
+		sqlite3 local-sqlite.db < $$file; \
+	done
 
 docker-setup:
 	curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.11/tailwindcss-linux-arm64

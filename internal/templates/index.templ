@@ -22,13 +22,14 @@ templ Main() {
 }
 
 templ FormContainer() {
-	<div id="formContainer" class="mt-32 flex">
+	<div id="formContainer" class="mt-32 flex flex-col gap-6">
 		<form
 			method="POST"
 			enctype="multipart/form-data"
 			hx-post="/scanReceipt"
 			hx-swap="outerHTML"
 			hx-target="#formContainer"
+			hx-indicator="#spinner"
 			class="flex flex-col items-center gap-6"
 		>
 			<div class="border border-black p-4" x-data>
@@ -46,6 +47,7 @@ templ FormContainer() {
 			<img id="imagePreview" src="#" alt="Scanned receipt image" class="hidden h-64 w-52 object-contain"/>
 			<button id="submitButton" type="submit" class="bg-blue-950 border rounded-lg text-white w-min px-4 py-1 hidden">Next</button>
 		</form>
+		<img id="spinner" src="/static/spinner.svg" alt="Spinner icon" class="h-14 htmx-indicator">
 	</div>
 }
 

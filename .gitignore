@@ -4,6 +4,7 @@ bin/*
 .vscode
 *.jpeg
 *.png
+local-sqlite.db
 
 # excluded files here
 !.keep

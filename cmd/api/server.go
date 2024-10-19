@@ -13,7 +13,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/lmittmann/tint"
 	"github.com/sashabaranov/go-openai"
-	_ "github.com/tursodatabase/libsql-client-go/libsql"
+	_ "github.com/tursodatabase/go-libsql"
 )
 
 type application struct {
@@ -46,14 +46,19 @@ func main() {
 
 	turso_db_url, exists := os.LookupEnv("TUSRO_DB_URL")
 	if !exists {
-		logger.Error("unable to obtain turso db url")
+		logger.Warn("unable to obtain turso db url")
 	}
 	turso_token, exists := os.LookupEnv("TURSO_TOKEN")
 	if !exists {
-		logger.Error("unable to obtain turso db token")
+		logger.Warn("unable to obtain turso db token")
 	}
 
-	db_url := fmt.Sprintf("libsql://%s.turso.io?authToken=%s", turso_db_url, turso_token)
+	var db_url string
+	if env == "PROD" {
+		db_url = fmt.Sprintf("libsql://%s.turso.io?authToken=%s", turso_db_url, turso_token)
+	} else {
+		db_url = "file:./local-sqlite.db"
+	}
 	db, err := sql.Open("libsql", db_url)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to connect to db %s", err))

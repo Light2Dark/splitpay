@@ -1,4 +1,3 @@
--- up
 CREATE TABLE IF NOT EXISTS receipts (
   id integer primary key,
   items text,
@@ -9,6 +8,3 @@ CREATE TABLE IF NOT EXISTS receipts (
   taxAmount real,
   totalAmount real
 );
-
--- down
-DROP TABLE receipts;
