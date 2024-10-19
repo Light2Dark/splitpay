@@ -1,6 +1,9 @@
 package templates
 
+templ ErrorLayout(message string) {
+    @Layout(ContainerDiv(Error(message)))
+}
+
 templ Error(message string) {
-	<h2>Sorry, please try again. We are facing some techincal difficulties.</h2>
-    <p>{ message }</p>
+    <h2 class="mt-12 text-center">{ message }</h2>
 }

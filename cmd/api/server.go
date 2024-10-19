@@ -91,6 +91,7 @@ func main() {
 	router.HandleFunc("PUT /saveReceipt", app.saveReceiptHandler)
 	router.HandleFunc("GET /viewReceipt/{receiptLink}", app.viewReceiptHandler)
 	router.HandleFunc("POST /payReceipt", app.payReceiptHandler)
+	router.HandleFunc("POST /markPaid", app.markPaidHandler)
 
 	server := http.Server{
 		Addr:    fmt.Sprintf(":%d", *port),

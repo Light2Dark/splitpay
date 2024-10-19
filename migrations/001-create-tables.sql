@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS receipts (
   items text,
   subtotal real,
   serviceCharge real,
+  serviceChargePercent real,
   taxPercent real,
   taxAmount real,
   totalAmount real

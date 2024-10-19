@@ -6,13 +6,14 @@ type Splits struct {
 }
 
 type ReceiptBase struct {
-	ID            int     `json:"ID"`
-	Link          string  `json:"Link"`
-	Subtotal      float64 `json:"Subtotal"`
-	ServiceCharge float64 `json:"ServiceCharge"`
-	TaxPercent    int     `json:"TaxPercent"`
-	TaxAmount     float64 `json:"TaxAmount"`
-	TotalAmount   float64 `json:"TotalAmount"`
+	ID                   int     `json:"ID"`
+	Link                 string  `json:"Link"`
+	Subtotal             float64 `json:"Subtotal"`
+	ServiceCharge        float64 `json:"ServiceCharge"`
+	ServiceChargePercent int     `json:"ServiceChargePercent"`
+	TaxPercent           int     `json:"TaxPercent"`
+	TaxAmount            float64 `json:"TaxAmount"`
+	TotalAmount          float64 `json:"TotalAmount"`
 }
 
 type ReceiptItemBase struct {
@@ -60,6 +61,7 @@ var MockReceipt = Receipt{
 		Link:          "12121212kl",
 		Subtotal:      29.15,
 		ServiceCharge: 2.92,
+		ServiceChargePercent: 10,
 		TaxPercent:    6,
 		TaxAmount:     1.92,
 		TotalAmount:   33.99,
