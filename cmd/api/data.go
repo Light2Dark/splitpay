@@ -59,6 +59,9 @@ func (app application) saveReceiptHandler(w http.ResponseWriter, r *http.Request
 func (app application) viewReceiptHandler(w http.ResponseWriter, r *http.Request) {
 	receiptLink := r.PathValue("receiptLink")
 
+	templates.ReceiptLayout(models.MockReceiptView).Render(r.Context(), w)
+	return
+
 	var receipt models.Receipt
 	row := app.db.QueryRow(`
 		SELECT receipts.id, link, items, subtotal, serviceCharge, serviceChargePercent, taxPercent, taxAmount, totalAmount FROM splits

@@ -75,3 +75,22 @@ var MockReceipt = Receipt{
 		{ReceiptItemBase: ReceiptItemBase{ID: 3, Name: "Item3", Quantity: 3, Price: 15.00}, PaidCount: 2},
 	},
 }
+
+var MockReceiptView = ReceiptView{
+	ReceiptBase: ReceiptBase{
+		ID:                   1,
+		Link:                 "12121212kl",
+		Subtotal:             29.15,
+		ServiceCharge:        2.92,
+		ServiceChargePercent: 10,
+		TaxPercent:           6,
+		TaxAmount:            1.92,
+		TotalAmount:          33.99,
+	},
+	Items: []ReceiptViewItem{
+		{ReceiptItemBase: ReceiptItemBase{ID: 1, Name: "Item1", Quantity: 1, Price: 8.40}, FinalPrice: 9.00, TaxAmount: 0.50, ServiceCharge: 0.84, Paid: false},
+		{ReceiptItemBase: ReceiptItemBase{ID: 1, Name: "Item1", Quantity: 1, Price: 8.40}, FinalPrice: 9.00, TaxAmount: 0.50, ServiceCharge: 0.84, Paid: true},
+		{ReceiptItemBase: ReceiptItemBase{ID: 2, Name: "Item2", Quantity: 1, Price: 5.75}, FinalPrice: 6.10, TaxAmount: 0.35, ServiceCharge: 0.58, Paid: true},
+		{ReceiptItemBase: ReceiptItemBase{ID: 3, Name: "Item3", Quantity: 1, Price: 5.00}, FinalPrice: 5.30, TaxAmount: 0.30, ServiceCharge: 0.50, Paid: false},
+	},
+}

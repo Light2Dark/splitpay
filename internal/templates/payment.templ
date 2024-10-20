@@ -2,7 +2,10 @@ package templates
 
 templ PaymentView(totalAmount string) {
 	<div id="paymentView" class="mt-10 flex flex-col gap-8">
-		<p class="text-center">Your total amount is <b>RM{ totalAmount }</b></p>
+		<div class="flex flex-row gap-6 items-center">
+			<button @click="displayFirstForm = true" class="rounded-md bg-blue-600 text-white px-2 py-1 self-start">Back</button>
+			<p class="text-center">Your total amount is <b>RM{ totalAmount }</b></p>
+		</div>
 		<div class="flex flex-col gap-2">
 			<h1 class="font-bold">Payment methods:</h1>
 			<ol type="1" class="list-decimal flex flex-col gap-2 ml-6 text-sm">
@@ -19,14 +22,18 @@ templ PaymentView(totalAmount string) {
 				</li>
 			</ol>
 		</div>
-		<button
-			hx-post="/markPaid"
-			hx-target="#paymentView"
-			hx-push-url="true"
-			class="border border-black rounded-md bg-black text-white w-32 px-3 py-1 self-center"
-		>
-			Mark as paid
-		</button>
+		<div class="flex flex-row justify-center gap-6">
+			<button
+				hx-post="/markPaid"
+				hx-target="#paymentView"
+				hx-push-url="true"
+				hx-indicator="#spinner"
+				class="rounded-md bg-black text-white px-3 py-1"
+			>
+				Mark as paid
+			</button>
+		</div>
+		<img id="spinner" src="/static/spinner.svg" alt="Spinner icon" class="h-14 htmx-indicator">
 	</div>
 }
 

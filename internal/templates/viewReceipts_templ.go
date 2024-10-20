@@ -67,7 +67,7 @@ func ReceiptView(receipt models.ReceiptView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<script type=\"text/javascript\">\n\t\tconst receipt = JSON.parse(document.getElementById(\"receipt\").textContent)\n\t\tif (window.Alpine === undefined) {\n\t\t\tconsole.error(\"Alpine is not loaded\")\n\t\t\tdocument.addEventListener('alpine:init', () => {\n\t\t\t\tinitializeData()\n\t\t\t})\n\t\t} else {\n\t\t\tinitializeData()\n\t\t}\n\n\t\tfunction initializeData() {\n\t\t\tAlpine.data('receipt', () => ({\n\t\t\t\treceipt: receipt,\n\t\t\t\tselectedAmount: 0.00,\n\t\t\t\tdisplayFirstForm: true,\n\n\t\t\t\tget totalAmount() {\n\t\t\t\t\treturn this.selectedAmount;\n\t\t\t\t},\n\t\t\t\tupdateSelectedAmount() {\n\t\t\t\t\tlet rowsWithChecked = document.querySelectorAll(`input[type='checkbox']:checked`);\n\t\t\t\t\tlet newAmount = 0;\n\t\t\t\t\trowsWithChecked.forEach(row => {\n\t\t\t\t\t\tlet priceCell = row.closest('tr').querySelector('td:nth-child(3) p');\n\t\t\t\t\t\tif (priceCell) {\n\t\t\t\t\t\t\tnewAmount += parseFloat(priceCell.textContent);\n\t\t\t\t\t\t}\n\t\t\t\t\t});\n\t\t\t\t\tthis.selectedAmount = newAmount.toFixed(2);\n\t\t\t\t},\n\t\t\t}))\n\t\t}\n\t</script><div x-data=\"receipt\" class=\"w-5/6 mb-10\"><form method=\"POST\" hx-post=\"/payReceipt\" hx-target=\"#secondForm\" hx-push-url=\"true\" :hx-vals=\"JSON.stringify({ receiptID: receipt.ID, totalAmount: totalAmount })\"><div id=\"secondForm\"></div><div x-show=\"displayFirstForm\"><p class=\"mt-4 text-center text-sm\">(Tax-included receipt)</p><table class=\"mt-10\"><thead><tr><th>Description</th><th>Qty</th><th>Price</th></tr></thead> ")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<script type=\"text/javascript\">\n\t\tconst receipt = JSON.parse(document.getElementById(\"receipt\").textContent)\n\t\tif (window.Alpine === undefined) {\n\t\t\tconsole.error(\"Alpine is not loaded\")\n\t\t\tdocument.addEventListener('alpine:init', () => {\n\t\t\t\tinitializeData()\n\t\t\t})\n\t\t} else {\n\t\t\tinitializeData()\n\t\t}\n\n\t\tfunction initializeData() {\n\t\t\tAlpine.data('receipt', () => ({\n\t\t\t\treceipt: receipt,\n\t\t\t\tselectedAmount: 0.00,\n\t\t\t\tdisplayFirstForm: true,\n\n\t\t\t\tget totalAmount() {\n\t\t\t\t\treturn this.selectedAmount;\n\t\t\t\t},\n\t\t\t\tupdateSelectedAmount() {\n\t\t\t\t\tlet rowsWithChecked = document.querySelectorAll(`input[type='checkbox']:checked`);\n\t\t\t\t\tlet newAmount = 0;\n\t\t\t\t\trowsWithChecked.forEach(row => {\n\t\t\t\t\t\tlet priceCell = row.closest('tr').querySelector('td:nth-child(3) p');\n\t\t\t\t\t\tif (priceCell) {\n\t\t\t\t\t\t\tnewAmount += parseFloat(priceCell.textContent);\n\t\t\t\t\t\t}\n\t\t\t\t\t});\n\t\t\t\t\tthis.selectedAmount = newAmount.toFixed(2);\n\t\t\t\t},\n\t\t\t}))\n\t\t}\n\t</script><div x-data=\"receipt\" class=\"w-5/6 mb-10\"><form method=\"POST\" hx-post=\"/payReceipt\" hx-target=\"#secondForm\" :hx-vals=\"JSON.stringify({ receiptID: receipt.ID, totalAmount: totalAmount })\"><div id=\"secondForm\" x-show=\"!displayFirstForm\"></div><div x-show=\"displayFirstForm\"><p class=\"mt-4 text-center text-sm\">(Tax-included receipt)</p><table class=\"mt-10\"><thead><tr><th>Description</th><th>Qty</th><th>Price</th></tr></thead> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -89,7 +89,7 @@ func ReceiptView(receipt models.ReceiptView) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", item.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/viewReceipts.templ`, Line: 74, Col: 42}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/viewReceipts.templ`, Line: 73, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -102,7 +102,7 @@ func ReceiptView(receipt models.ReceiptView) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("itemCheckbox-%d", i))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/viewReceipts.templ`, Line: 75, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/viewReceipts.templ`, Line: 74, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -131,7 +131,7 @@ func ReceiptView(receipt models.ReceiptView) templ.Component {
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", item.ID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/viewReceipts.templ`, Line: 78, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/viewReceipts.templ`, Line: 77, Col: 48}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -144,7 +144,7 @@ func ReceiptView(receipt models.ReceiptView) templ.Component {
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(item.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/viewReceipts.templ`, Line: 79, Col: 40}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/viewReceipts.templ`, Line: 78, Col: 40}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -183,7 +183,7 @@ func ReceiptView(receipt models.ReceiptView) templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(item.Quantity))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/viewReceipts.templ`, Line: 85, Col: 42}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/viewReceipts.templ`, Line: 84, Col: 42}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -222,7 +222,7 @@ func ReceiptView(receipt models.ReceiptView) templ.Component {
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f", item.FinalPrice))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/viewReceipts.templ`, Line: 90, Col: 50}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/viewReceipts.templ`, Line: 89, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -245,7 +245,7 @@ func ReceiptView(receipt models.ReceiptView) templ.Component {
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(printBreakdown(item.Price, item.ServiceCharge, item.TaxAmount))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/viewReceipts.templ`, Line: 95, Col: 120}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/viewReceipts.templ`, Line: 94, Col: 120}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -263,13 +263,13 @@ func ReceiptView(receipt models.ReceiptView) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f", receipt.TotalAmount))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/viewReceipts.templ`, Line: 101, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/viewReceipts.templ`, Line: 100, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td></tr></tfoot></table><div class=\"flex flex-col items-center mt-6 gap-6\"><p>You owe <b x-text=\"selectedAmount\"></b></p><button @click=\"displayFirstForm = false\" class=\"border border-black rounded-md bg-black text-white w-min px-3 py-1\">Pay</button></div></div></form></div>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td></tr></tfoot></table><div class=\"flex flex-col items-center mt-6 gap-6\"><p>You owe <b x-text=\"selectedAmount\"></b></p><button @click=\"displayFirstForm = false\" class=\"rounded-md bg-black text-white px-3 py-1\">Pay</button></div></div></form></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
