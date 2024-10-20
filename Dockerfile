@@ -8,7 +8,7 @@ RUN go mod download
 
 COPY . ./
 
-RUN go build -ldflags="-w -s" -o /bin/splitpay ./cmd/api
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /bin/splitpay ./cmd/api
 
 # deploy app binary into lean image
 FROM alpine:edge AS build-release-stage

@@ -13,7 +13,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/lmittmann/tint"
 	"github.com/sashabaranov/go-openai"
-	_ "github.com/tursodatabase/go-libsql"
+	_ "github.com/tursodatabase/libsql-client-go/libsql"
 )
 
 type application struct {
@@ -54,11 +54,14 @@ func main() {
 	}
 
 	var db_url string
-	if env == "PROD" {
-		db_url = fmt.Sprintf("libsql://%s.turso.io?authToken=%s", turso_db_url, turso_token)
-	} else {
-		db_url = "file:./local-sqlite.db"
-	}
+	// TODO: libsql lib does not work without CGO
+	// if env == "PROD" {
+	// 	db_url = fmt.Sprintf("libsql://%s.turso.io?authToken=%s", turso_db_url, turso_token)
+	// } else {
+	// 	db_url = "file:./local-sqlite.db"
+	// }
+
+	db_url = fmt.Sprintf("libsql://%s.turso.io?authToken=%s", turso_db_url, turso_token)
 	db, err := sql.Open("libsql", db_url)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to connect to db %s", err))
