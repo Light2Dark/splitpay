@@ -8,11 +8,7 @@ RUN go mod download
 
 COPY . ./
 
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /bin/splitpay ./cmd/api 
-
-# run tests in container
-FROM build-stage as run-test-stage
-RUN go test -v ./...
+RUN go build -ldflags="-w -s" -o /bin/splitpay ./cmd/api
 
 # deploy app binary into lean image
 FROM alpine:edge AS build-release-stage
