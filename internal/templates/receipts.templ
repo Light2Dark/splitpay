@@ -53,10 +53,6 @@ templ ReceiptTable(receipt models.Receipt) {
 					}
 				},
 
-				updateServiceCharge() {
-					this.receipt.TotalAmount = this.roundTo2DP(Number(this.receipt.Subtotal) + Number(this.receipt.TaxAmount) + Number(this.receipt.ServiceCharge))
-				},
-
 				updatePrice() {
 					amount = 0
 					for (let i = 0; i < this.receipt.Items.length; i++) {
@@ -67,8 +63,12 @@ templ ReceiptTable(receipt models.Receipt) {
 				},
 
 				updateAmounts() {
-					this.receipt.TaxAmount = this.roundTo2DP(this.receipt.Subtotal * (this.receipt.TaxPercent / 100))
-					this.receipt.TotalAmount = this.roundTo2DP(Number(this.receipt.Subtotal) + Number(this.receipt.TaxAmount) + Number(this.receipt.ServiceCharge))
+					this.receipt.TaxAmount = this.roundTo2DP((this.receipt.Subtotal + this.receipt.Discount) * (this.receipt.TaxPercent / 100))
+					this.updateTotalAmount()
+				},
+				
+				updateTotalAmount() {
+					this.receipt.TotalAmount = this.roundTo2DP(Number(this.receipt.Subtotal) + Number(this.receipt.Discount) + Number(this.receipt.TaxAmount) + Number(this.receipt.ServiceCharge))
 				},
 
 				addItem() {
@@ -87,7 +87,7 @@ templ ReceiptTable(receipt models.Receipt) {
 						e.preventDefault()
 					}
 				},
-				
+
 				// TODO: is there a better way to handle this + not hardcode the redirection link
 				async saveReceipt(e) {
 					e.preventDefault()
@@ -109,8 +109,9 @@ templ ReceiptTable(receipt models.Receipt) {
 					})
 					.then(response => response.json())
 					.then(data => {
-						alert("Receipt saved successfully, please share the link below")
 						document.getElementById("shareLink").textContent = window.location.href + "viewReceipt/" + receipt.Link
+						navigator.clipboard.writeText(document.getElementById("shareLink").textContent)
+						alert("Share Link copied to clipboard!")
 					})
 				},
 
@@ -172,6 +173,21 @@ templ ReceiptTable(receipt models.Receipt) {
 					<td x-text="receipt.Subtotal"></td>
 				</tr>
 				<tr>
+					<td colspan="2">Discount</td>
+					<td>
+						<input
+							type="number"
+							name="discount"
+							step="0.01"
+							value="-0"
+							max="0"
+							x-model.number="receipt.Discount"
+							@input="updateTotalAmount"
+							class="w-14 rounded-sm px-0.5 text-right"
+						/>
+					</td>
+				</tr>
+				<tr>
 					<td colspan="2">Service Charge</td>
 					<td>
 						<input
@@ -179,7 +195,7 @@ templ ReceiptTable(receipt models.Receipt) {
 							name="service-charge"
 							step="0.01"
 							x-model.number="receipt.ServiceCharge"
-							@input="updateServiceCharge"
+							@input="updateTotalAmount"
 							class="w-14 rounded-sm px-0.5 text-right"
 						/>
 					</td>
@@ -199,5 +215,5 @@ templ ReceiptTable(receipt models.Receipt) {
 			<button type="submit" class="rounded-lg border border-black p-2">Share Link</button>
 		</div>
 	</form>
-	<p id="shareLink" class="mb-10"></p>
+	<p id="shareLink" class="text-center"></p>
 }

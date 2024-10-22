@@ -54,7 +54,7 @@ func (app application) scanReceiptHandler(w http.ResponseWriter, r *http.Request
 					MultiContent: []openai.ChatMessagePart{
 						{
 							Type: openai.ChatMessagePartTypeText,
-							Text: "This is a receipt. I would like you to return a list of items that were ordered, alongside their price and quantity. The quantity might be at the start like '1' or in the middle. There may be times when there are additions to the item, like HOT / + milk underneath Coffee. These rows will not have a corresponding charge. Ignore them. Lastly, return the service charge amount and tax (amount and percent) that was charged. Check the image carefully and spend some time to extract accurate information. Do not change the words of what is displayed as it may be in different languages.",
+							Text: "This is a receipt. I would like you to return a list of items that were ordered, alongside their price and quantity. The quantity might be at the start like '1' or in the middle. There may be times when there are additions to the item, like HOT / + milk underneath Coffee. These rows will not have a corresponding charge. Ignore them. Lastly, return the service charge amount and tax (amount and percent) that was charged. If there is a discount, identify the amount too. Check the image carefully and spend some time to extract accurate information. Do not change the words of what is displayed as it may be in different languages.",
 						},
 						{
 							Type: openai.ChatMessagePartTypeImageURL,
@@ -93,6 +93,7 @@ func (app application) scanReceiptHandler(w http.ResponseWriter, r *http.Request
 	receipt.TotalAmount = receiptOpenAI.TotalAmount
 	receipt.TaxAmount = receiptOpenAI.TaxAmount
 	receipt.TaxPercent = receiptOpenAI.TaxPercent
+	receipt.Discount = receiptOpenAI.Discount
 
 	var itemCount int = 1
 	for _, item := range receiptOpenAI.Items {
@@ -122,35 +123,50 @@ func (app application) scanReceiptHandler(w http.ResponseWriter, r *http.Request
 		item.Price = singleItemPrice
 	}
 
+	// subtotal = total of items.
+	// - overall discount = amount to be service charged
+	// + service charge = pre tax total.
+	// + tax = total
+
 	if subtotal != receipt.Subtotal {
 		app.logger.Info(fmt.Sprintf("incorrect subtotal by openai, openai: %f, expected: %f", receipt.Subtotal, subtotal))
 		receipt.Subtotal = roundTo2DP(subtotal)
 	}
 
-	var taxAmount = roundTo2DP(subtotal * 0.06)
+	// change discount to negative
+	if receipt.Discount > 0 {
+		receipt.Discount = roundTo2DP(-1 * receipt.Discount)
+	}
+	receipt.DiscountPercent = int(receipt.Discount * 100 / subtotal)
+
+	var toBeServiceCharged = subtotal + receipt.Discount
+	var serviceChargePercent = getServiceChargePercent(receipt.ServiceCharge, toBeServiceCharged)
+	app.logger.Info("service charge percent", "val", serviceChargePercent)
+
+	var preTax = toBeServiceCharged + receipt.ServiceCharge
+
+	var taxAmount = roundTo2DP(preTax * 0.06)
 	receipt.TaxPercent = 6 // hardcode for now
 	if taxAmount != receipt.TaxAmount {
 		app.logger.Info(fmt.Sprintf("incorrect tax amount by openai, openai: %f, expected: %f", receipt.TaxAmount, taxAmount))
-		receipt.TaxAmount = roundTo2DP(taxAmount)
+		receipt.TaxAmount = taxAmount
 	}
 
-	var totalAmountExpected = roundTo2DP(subtotal + taxAmount + receipt.ServiceCharge)
+	var totalAmountExpected = roundTo2DP(preTax + taxAmount)
 	if totalAmountExpected != receipt.TotalAmount {
+		receipt.TotalAmount = totalAmountExpected
 		app.logger.Info(fmt.Sprintf("incorrect total amount by openai, openai: %f, expected: %f", receipt.TotalAmount, totalAmountExpected))
 	}
-
-	var serviceChargePercent = getServiceChargePercent(receipt.ServiceCharge, receipt.Subtotal)
-	app.logger.Info("service charge percent", "val", serviceChargePercent)
 
 	itemsJson, err := json.Marshal(receipt.Items)
 	if err != nil {
 		app.logger.Error("unable to marshal json", "error", err)
 	}
 	row := app.db.QueryRow(`
-		INSERT INTO receipts (items, subtotal, serviceCharge, serviceChargePercent, taxPercent, taxAmount, totalAmount)
-		VALUES(?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO receipts (items, subtotal, serviceCharge, serviceChargePercent, taxPercent, taxAmount, discount, discountPercent, totalAmount)
+		VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
 		RETURNING id;
-	`, string(itemsJson), receipt.Subtotal, receipt.ServiceCharge, serviceChargePercent, receipt.TaxPercent, receipt.TaxAmount, receipt.TotalAmount)
+	`, string(itemsJson), receipt.Subtotal, receipt.ServiceCharge, serviceChargePercent, receipt.TaxPercent, receipt.TaxAmount, receipt.Discount, receipt.DiscountPercent, receipt.TotalAmount)
 
 	var id int
 	err = row.Scan(&id)
@@ -212,4 +228,8 @@ func generateShortKey(keyLength int) string {
 		shortKey[i] = charset[rand.Intn(len(charset))]
 	}
 	return string(shortKey)
+}
+
+func getServiceChargePercent(serviceCharge float64, total float64) int {
+	return int(serviceCharge * 100 / total)
 }

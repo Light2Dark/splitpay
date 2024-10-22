@@ -59,19 +59,17 @@ func (app application) saveReceiptHandler(w http.ResponseWriter, r *http.Request
 func (app application) viewReceiptHandler(w http.ResponseWriter, r *http.Request) {
 	receiptLink := r.PathValue("receiptLink")
 
-	templates.ReceiptLayout(models.MockReceiptView).Render(r.Context(), w)
-	return
-
 	var receipt models.Receipt
 	row := app.db.QueryRow(`
-		SELECT receipts.id, link, items, subtotal, serviceCharge, serviceChargePercent, taxPercent, taxAmount, totalAmount FROM splits
+		SELECT receipts.id, link, items, subtotal, serviceCharge, 
+		serviceChargePercent, taxPercent, taxAmount, discount, discountPercent, totalAmount FROM splits
 		INNER JOIN receipts
 		ON splits.receipt_id = receipts.id
 		WHERE splits.link = ?;
 	`, receiptLink)
 
 	var itemsStr string
-	err := row.Scan(&receipt.ID, &receipt.Link, &itemsStr, &receipt.Subtotal, &receipt.ServiceCharge, &receipt.ServiceChargePercent, &receipt.TaxPercent, &receipt.TaxAmount, &receipt.TotalAmount)
+	err := row.Scan(&receipt.ID, &receipt.Link, &itemsStr, &receipt.Subtotal, &receipt.ServiceCharge, &receipt.ServiceChargePercent, &receipt.TaxPercent, &receipt.TaxAmount, &receipt.Discount, &receipt.DiscountPercent, &receipt.TotalAmount)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			app.logger.Info("Receipt does not exist", "error", err, "link", receiptLink)
@@ -97,6 +95,9 @@ func (app application) viewReceiptHandler(w http.ResponseWriter, r *http.Request
 		for range item.Quantity {
 			var newItem models.ReceiptViewItem
 			singleItemPrice := (item.Price / float64(item.Quantity))
+
+			discount := (singleItemPrice * float64(receipt.DiscountPercent) / 100)
+			singleItemPrice = singleItemPrice + discount // discount is negative
 
 			serviceCharge := (singleItemPrice * float64(receipt.ServiceChargePercent) / 100)
 			taxAmount := (singleItemPrice * float64(receipt.TaxPercent) / 100)
@@ -210,8 +211,4 @@ func (app application) markPaidHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	templates.PaymentResult().Render(r.Context(), w)
-}
-
-func getServiceChargePercent(serviceCharge float64, subtotal float64) int {
-	return  int(serviceCharge * 100 / subtotal)
 }

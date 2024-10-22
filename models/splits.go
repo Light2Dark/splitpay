@@ -13,6 +13,8 @@ type ReceiptBase struct {
 	ServiceChargePercent int     `json:"ServiceChargePercent"`
 	TaxPercent           int     `json:"TaxPercent"`
 	TaxAmount            float64 `json:"TaxAmount"`
+	Discount             float64 `json:"Discount"`
+	DiscountPercent      int     `json:"DiscountPercent"`
 	TotalAmount          float64 `json:"TotalAmount"`
 }
 
@@ -52,10 +54,12 @@ type ReceiptOpenAI struct {
 		Quantity int     `json:"quantity"`
 		Price    float64 `json:"price"`
 	} `json:"items"`
-	ServiceCharge float64 `json:"serviceCharge"` // this fields can be empty but openai does not support optional fields
-	TaxPercent    int     `json:"taxPercent"`
-	TaxAmount     float64 `json:"taxAmount"`
-	TotalAmount   float64 `json:"totalAmount"`
+	ServiceCharge   float64 `json:"serviceCharge"` // this fields can be empty but openai does not support optional fields
+	TaxPercent      int     `json:"taxPercent"`
+	TaxAmount       float64 `json:"taxAmount"`
+	Discount        float64 `json:"discount"`
+	DiscountPercent int     `json:"discountPercent"`
+	TotalAmount     float64 `json:"totalAmount"`
 }
 
 var MockReceipt = Receipt{
@@ -67,7 +71,8 @@ var MockReceipt = Receipt{
 		ServiceChargePercent: 10,
 		TaxPercent:           6,
 		TaxAmount:            1.92,
-		TotalAmount:          33.99,
+		TotalAmount:          31.99,
+		Discount:             2,
 	},
 	Items: []ReceiptItem{
 		{ReceiptItemBase: ReceiptItemBase{ID: 1, Name: "Item1", Quantity: 2, Price: 8.40}, PaidCount: 0},
@@ -85,7 +90,8 @@ var MockReceiptView = ReceiptView{
 		ServiceChargePercent: 10,
 		TaxPercent:           6,
 		TaxAmount:            1.92,
-		TotalAmount:          33.99,
+		TotalAmount:          31.99,
+		Discount:             2,
 	},
 	Items: []ReceiptViewItem{
 		{ReceiptItemBase: ReceiptItemBase{ID: 1, Name: "Item1", Quantity: 1, Price: 8.40}, FinalPrice: 9.00, TaxAmount: 0.50, ServiceCharge: 0.84, Paid: false},

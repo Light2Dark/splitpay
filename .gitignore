@@ -2,8 +2,7 @@
 *.env
 bin/*
 .vscode
-*.jpeg
-*.png
+test/*
 local-sqlite.db
 
 # excluded files here
