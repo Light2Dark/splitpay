@@ -4,20 +4,20 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io"
 	"math"
 	"math/rand"
 	"mime/multipart"
 	"net/http"
 
+	"github.com/Light2Dark/splitpay/internal/receipts"
 	"github.com/Light2Dark/splitpay/internal/templates"
 	"github.com/Light2Dark/splitpay/models"
 	"github.com/sashabaranov/go-openai"
 	"github.com/sashabaranov/go-openai/jsonschema"
 )
 
-func (app application) scanReceiptHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) scanReceiptHandler(w http.ResponseWriter, r *http.Request) {
 	file, _, err := r.FormFile("receipt")
 	if err != nil {
 		app.logError(w, r, "Error when scanning file", err)
@@ -87,75 +87,9 @@ func (app application) scanReceiptHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// convert OpenAIReceipt to actual receipt
-	var receipt models.Receipt
-	receipt.ServiceCharge = receiptOpenAI.ServiceCharge
-	receipt.TotalAmount = receiptOpenAI.TotalAmount
-	receipt.TaxAmount = receiptOpenAI.TaxAmount
-	receipt.TaxPercent = receiptOpenAI.TaxPercent
-	receipt.Discount = receiptOpenAI.Discount
-
-	var itemCount int = 1
-	for _, item := range receiptOpenAI.Items {
-		var itemAI = models.ReceiptItem{
-			ReceiptItemBase: models.ReceiptItemBase{
-				ID:       itemCount,
-				Name:     item.Name,
-				Quantity: item.Quantity,
-				Price:    item.Price,
-			},
-			PaidCount: 0,
-		}
-		receipt.Items = append(receipt.Items, itemAI)
-		itemCount = itemCount + 1
-	}
-
-	// totalAmount is almost always true, but the indiv items will be not true, so total will be false.
-	// we need to get a single item price and store that in receipt, to improve accuracy
-	var subtotal float64
-	for _, item := range receipt.Items {
-		totalPrice := item.Price
-		subtotal += totalPrice
-		qty := item.Quantity
-
-		singleItemPrice := totalPrice / float64(qty)
-		singleItemPrice = roundTo2DP(singleItemPrice)
-		item.Price = singleItemPrice
-	}
-
-	// subtotal = total of items.
-	// - overall discount = amount to be service charged
-	// + service charge = pre tax total.
-	// + tax = total
-
-	if subtotal != receipt.Subtotal {
-		app.logger.Info(fmt.Sprintf("incorrect subtotal by openai, openai: %f, expected: %f", receipt.Subtotal, subtotal))
-		receipt.Subtotal = roundTo2DP(subtotal)
-	}
-
-	// change discount to negative
-	if receipt.Discount > 0 {
-		receipt.Discount = roundTo2DP(-1 * receipt.Discount)
-	}
-	receipt.DiscountPercent = int(receipt.Discount * 100 / subtotal)
-
-	var toBeServiceCharged = subtotal + receipt.Discount
-	var serviceChargePercent = getServiceChargePercent(receipt.ServiceCharge, toBeServiceCharged)
-	app.logger.Info("service charge percent", "val", serviceChargePercent)
-
-	var preTax = toBeServiceCharged + receipt.ServiceCharge
-
-	var taxAmount = roundTo2DP(preTax * 0.06)
-	receipt.TaxPercent = 6 // hardcode for now
-	if taxAmount != receipt.TaxAmount {
-		app.logger.Info(fmt.Sprintf("incorrect tax amount by openai, openai: %f, expected: %f", receipt.TaxAmount, taxAmount))
-		receipt.TaxAmount = taxAmount
-	}
-
-	var totalAmountExpected = roundTo2DP(preTax + taxAmount)
-	if totalAmountExpected != receipt.TotalAmount {
-		receipt.TotalAmount = totalAmountExpected
-		app.logger.Info(fmt.Sprintf("incorrect total amount by openai, openai: %f, expected: %f", receipt.TotalAmount, totalAmountExpected))
+	receipt, messages := receipts.ConvertOpenAIReceiptToReceipt(receiptOpenAI)
+	for _, msg := range messages {
+		app.logger.Info(msg)
 	}
 
 	itemsJson, err := json.Marshal(receipt.Items)
@@ -166,7 +100,7 @@ func (app application) scanReceiptHandler(w http.ResponseWriter, r *http.Request
 		INSERT INTO receipts (items, subtotal, serviceCharge, serviceChargePercent, taxPercent, taxAmount, discount, discountPercent, totalAmount)
 		VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
 		RETURNING id;
-	`, string(itemsJson), receipt.Subtotal, receipt.ServiceCharge, serviceChargePercent, receipt.TaxPercent, receipt.TaxAmount, receipt.Discount, receipt.DiscountPercent, receipt.TotalAmount)
+	`, string(itemsJson), receipt.Subtotal, receipt.ServiceCharge, receipt.ServiceChargePercent, receipt.TaxPercent, receipt.TaxAmount, receipt.Discount, receipt.DiscountPercent, receipt.TotalAmount)
 
 	var id int
 	err = row.Scan(&id)
@@ -228,8 +162,4 @@ func generateShortKey(keyLength int) string {
 		shortKey[i] = charset[rand.Intn(len(charset))]
 	}
 	return string(shortKey)
-}
-
-func getServiceChargePercent(serviceCharge float64, total float64) int {
-	return int(serviceCharge * 100 / total)
 }

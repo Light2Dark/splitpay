@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/Light2Dark/splitpay/internal/receipts"
 	"github.com/Light2Dark/splitpay/internal/templates"
 	"github.com/Light2Dark/splitpay/models"
 )
@@ -15,7 +16,7 @@ type saveReceiptResponse struct {
 	Message string `json:"message"`
 }
 
-func (app application) saveReceiptHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) saveReceiptHandler(w http.ResponseWriter, r *http.Request) {
 	var receipt models.Receipt
 	err := json.NewDecoder(r.Body).Decode(&receipt)
 	if err != nil {
@@ -31,7 +32,7 @@ func (app application) saveReceiptHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	var serviceChargePercent = getServiceChargePercent(receipt.ServiceCharge, receipt.Subtotal)
+	var serviceChargePercent = receipts.GetServiceChargePercent(receipt.ServiceCharge, receipt.Subtotal)
 	app.logger.Info("service charge percent", "val", serviceChargePercent)
 
 	_, err = app.db.Exec(`
@@ -56,7 +57,7 @@ func (app application) saveReceiptHandler(w http.ResponseWriter, r *http.Request
 	json.NewEncoder(w).Encode(&saveReceiptResponse{Message: "OK"})
 }
 
-func (app application) viewReceiptHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) viewReceiptHandler(w http.ResponseWriter, r *http.Request) {
 	receiptLink := r.PathValue("receiptLink")
 
 	var receipt models.Receipt
@@ -127,7 +128,7 @@ func (app application) viewReceiptHandler(w http.ResponseWriter, r *http.Request
 	templates.ReceiptLayout(newReceipt).Render(r.Context(), w)
 }
 
-func (app application) payReceiptHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) payReceiptHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
 	var totalAmount = r.FormValue("totalAmount")
@@ -138,7 +139,7 @@ func (app application) payReceiptHandler(w http.ResponseWriter, r *http.Request)
 	templates.PaymentView(totalAmount).Render(r.Context(), w)
 }
 
-func (app application) markPaidHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) markPaidHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
 	var receiptID string
@@ -212,3 +213,23 @@ func (app application) markPaidHandler(w http.ResponseWriter, r *http.Request) {
 
 	templates.PaymentResult().Render(r.Context(), w)
 }
+
+// func (app *application) modifyQuantityHandler(w http.ResponseWriter, r *http.Request) {
+// 	r.ParseForm()
+
+// 	itemID := r.URL.Query().Get("itemID")
+// 	quantity := r.URL.Query().Get("quantity")
+// 	app.logger.Info("modifyQuantity", "itemID", itemID, "quantity", quantity)
+
+// 	var receipt = models.MockReceipt
+
+// 	for key, values := range r.Form {
+// 		if strings.HasPrefix(strings.ToLower(key), "itemname") {
+// 			id := strings.Split(key, "-")[1]
+// 			app.logger.Info("received", "name", values, "id", id)
+// 		}
+// 	}
+
+// 	receipt.TotalAmount = 1000
+// 	templates.Table(receipt).Render(r.Context(), w)
+// }

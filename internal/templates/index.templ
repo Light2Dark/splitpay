@@ -18,7 +18,7 @@ templ Main() {
 		}
 	</script>
 	@ContainerDiv(FormContainer())
-	// @ReceiptTable(models.MockReceipt)
+	// @ContainerDiv(ReceiptTable(models.MockReceipt))
 }
 
 templ FormContainer() {
@@ -47,7 +47,7 @@ templ FormContainer() {
 			<img id="imagePreview" src="#" alt="Scanned receipt image" class="hidden h-64 w-52 object-contain"/>
 			<button id="submitButton" type="submit" class="bg-blue-950 border rounded-lg text-white w-min px-4 py-1 hidden">Next</button>
 		</form>
-		<img id="spinner" src="/static/spinner.svg" alt="Spinner icon" class="h-8 htmx-indicator">
+		<img id="spinner" src="/static/spinner.svg" alt="Spinner icon" class="h-8 htmx-indicator"/>
 	</div>
 }
 
